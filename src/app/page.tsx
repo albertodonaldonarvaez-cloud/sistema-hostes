@@ -430,90 +430,81 @@ export default function Home() {
       </header>
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-3 sm:px-4 py-4 space-y-4">
-        {/* ===== STATS DASHBOARD — 2x2 compact ===== */}
+        {/* ===== STATS DASHBOARD — Ultra compact single row ===== */}
         {stats && (
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 fade-in-up stagger-children">
-            {/* Total Personas */}
-            <Card className="rounded-xl sm:rounded-2xl border border-rose-soft/20 bg-white shadow-sm overflow-hidden">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <div className="p-1 rounded-lg bg-rose-light">
-                    <Users className="h-3.5 w-3.5 text-rose-deep" />
-                  </div>
-                  <span className="text-[10px] sm:text-xs font-medium text-warm-gray">Total</span>
+          <div className="fade-in-up">
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-rose-soft/20 shadow-sm">
+              {/* Total */}
+              <div className="flex-1 text-center">
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <Users className="h-3 w-3 text-rose-deep" />
+                  <span className="text-[9px] font-semibold text-warm-gray/70 uppercase tracking-wide">Total</span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold text-charcoal">
-                  {stats.totalPersonas}
-                </p>
-                <p className="text-[10px] sm:text-xs text-warm-gray mt-0.5">{stats.totalInvitados} grupos</p>
-              </CardContent>
-            </Card>
+                <p className="text-base sm:text-lg font-bold text-charcoal leading-tight">{stats.totalPersonas}</p>
+              </div>
 
-            {/* Llegaron */}
-            <Card className="rounded-xl sm:rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <div className="p-1 rounded-lg bg-emerald-50">
-                    <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  </div>
-                  <span className="text-[10px] sm:text-xs font-medium text-warm-gray">Llegaron</span>
-                </div>
-                <p className="text-xl sm:text-2xl font-bold text-emerald-600">
-                  {stats.totalArrived}
-                </p>
-                <p className="text-[10px] sm:text-xs text-warm-gray mt-0.5">personas</p>
-              </CardContent>
-            </Card>
+              <div className="w-px h-8 bg-gray-200/60" />
 
-            {/* Pendientes */}
-            <Card className="rounded-xl sm:rounded-2xl border border-amber-200 bg-white shadow-sm overflow-hidden">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <div className="p-1 rounded-lg bg-amber-50">
-                    <Clock className="h-3.5 w-3.5 text-amber-600" />
-                  </div>
-                  <span className="text-[10px] sm:text-xs font-medium text-warm-gray">Pendientes</span>
+              {/* Llegaron */}
+              <div className="flex-1 text-center">
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <UserCheck className="h-3 w-3 text-emerald-500" />
+                  <span className="text-[9px] font-semibold text-warm-gray/70 uppercase tracking-wide">Llegaron</span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold text-amber-600">
-                  {stats.totalPending}
-                </p>
-                <p className="text-[10px] sm:text-xs text-warm-gray mt-0.5">por llegar</p>
-              </CardContent>
-            </Card>
+                <p className="text-base sm:text-lg font-bold text-emerald-600 leading-tight">{stats.totalArrived}</p>
+              </div>
 
-            {/* Progreso */}
-            <Card className="rounded-xl sm:rounded-2xl border border-rose-soft/20 bg-white shadow-sm overflow-hidden">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <div className="p-1 rounded-lg bg-rose-light">
-                    <Sparkles className="h-3.5 w-3.5 text-rose-deep" />
-                  </div>
-                  <span className="text-[10px] sm:text-xs font-medium text-warm-gray">Progreso</span>
+              <div className="w-px h-8 bg-gray-200/60" />
+
+              {/* Pendientes */}
+              <div className="flex-1 text-center">
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <Clock className="h-3 w-3 text-amber-500" />
+                  <span className="text-[9px] font-semibold text-warm-gray/70 uppercase tracking-wide">Pendientes</span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold text-rose-deep">
-                  {stats.percentage}%
-                </p>
-                <div className="mt-1.5 wedding-progress h-2 sm:h-2.5">
+                <p className="text-base sm:text-lg font-bold text-amber-600 leading-tight">{stats.totalPending}</p>
+              </div>
+
+              <div className="w-px h-8 bg-gray-200/60" />
+
+              {/* Progreso */}
+              <div className="flex-1 text-center">
+                <div className="flex items-center justify-center gap-1 mb-0.5">
+                  <Sparkles className="h-3 w-3 text-rose-deep" />
+                  <span className="text-[9px] font-semibold text-warm-gray/70 uppercase tracking-wide">Progreso</span>
+                </div>
+                <p className="text-base sm:text-lg font-bold text-rose-deep leading-tight">{stats.percentage}%</p>
+                <div className="mt-1 wedding-progress h-1.5">
                   <div
                     className="wedding-progress-bar h-full"
                     style={{ width: `${stats.percentage}%` }}
                   />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* ===== SEARCH BAR — Sticky on mobile ===== */}
-        <div className="sticky top-0 z-30 -mx-3 px-3 pt-2 pb-1 sm:static sm:-mx-4 sm:px-4 sm:pt-0 sm:pb-0 bg-ivory/95 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray" />
+        {/* ===== SEARCH BAR — Big, prominent, sticky on mobile ===== */}
+        <div className="sticky top-0 z-30 -mx-3 px-3 pt-2 pb-2 sm:static sm:-mx-4 sm:px-4 sm:pt-0 sm:pb-0 bg-ivory/95 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none">
+          <div className="relative group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center h-6 w-6 rounded-full bg-rose-light/60">
+              <Search className="h-4 w-4 text-rose-deep group-focus-within:text-champagne transition-colors" />
+            </div>
             <Input
-              placeholder="Buscar invitado..."
+              placeholder="Buscar invitado por nombre..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 h-11 sm:h-12 rounded-xl border-rose-light/60 bg-white shadow-sm focus:border-champagne focus:ring-champagne/20 text-charcoal placeholder:text-warm-gray/60 text-base"
+              className="pl-12 h-14 sm:h-16 rounded-2xl border-2 border-rose-light/50 bg-white shadow-md focus:border-champagne focus:ring-2 focus:ring-champagne/20 text-charcoal placeholder:text-warm-gray/50 text-lg sm:text-xl font-medium"
             />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              >
+                <span className="text-warm-gray text-sm font-bold">×</span>
+              </button>
+            )}
           </div>
         </div>
 
