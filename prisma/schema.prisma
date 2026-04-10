@@ -15,6 +15,7 @@ model Guest {
   notas       String?
   activo      Boolean   @default(true)
   arrived     Boolean   @default(false)
+  arrivedCount Int      @default(0)
   arrivedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

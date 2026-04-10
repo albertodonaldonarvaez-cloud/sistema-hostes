@@ -25,7 +25,18 @@ import {
   PartyPopper,
   AlertCircle,
   UserCheck,
+  Plus,
+  Minus,
+  X,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 interface Guest {
   id: string;
@@ -35,6 +46,7 @@ interface Guest {
   notas: string | null;
   activo: boolean;
   arrived: boolean;
+  arrivedCount: number;
   arrivedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -81,6 +93,8 @@ export default function Home() {
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
   const [categories, setCategories] = useState<string[]>([]);
   const [animatingId, setAnimatingId] = useState<string | null>(null);
+  const [checkInGuest, setCheckInGuest] = useState<Guest | null>(null);
+  const [checkInCount, setCheckInCount] = useState(0);
 
   const fetchGuests = useCallback(async () => {
     try {
@@ -144,12 +158,25 @@ export default function Home() {
     }
   };
 
-  const handleCheckIn = async (guest: Guest) => {
-    const newArrived = !guest.arrived;
+  const openCheckIn = (guest: Guest) => {
+    if (guest.arrived) {
+      // If already arrived, just cancel (no dialog)
+      confirmCheckIn(guest, 0);
+      return;
+    }
+    setCheckInGuest(guest);
+    setCheckInCount(guest.invitados);
+  };
+
+  const confirmCheckIn = async (guest: Guest, count: number) => {
+    setCheckInGuest(null);
+
+    const newArrived = count > 0;
     const newArrivedAt = newArrived ? new Date().toISOString() : null;
+    const oldCount = guest.arrived ? guest.arrivedCount : 0;
 
     // Trigger animation
-    if (newArrived) {
+    if (newArrived && !guest.arrived) {
       setAnimatingId(guest.id);
       setTimeout(() => setAnimatingId(null), 600);
     }
@@ -158,26 +185,20 @@ export default function Home() {
     setGuests((prev) =>
       prev.map((g) =>
         g.id === guest.id
-          ? { ...g, arrived: newArrived, arrivedAt: newArrivedAt }
+          ? { ...g, arrived: newArrived, arrivedCount: count, arrivedAt: newArrivedAt }
           : g
       )
     );
 
     if (stats) {
-      const personasDelta = guest.invitados;
+      const delta = count - oldCount;
       setStats({
         ...stats,
-        totalArrived: newArrived
-          ? stats.totalArrived + personasDelta
-          : stats.totalArrived - personasDelta,
-        totalPending: newArrived
-          ? stats.totalPending - personasDelta
-          : stats.totalPending + personasDelta,
+        totalArrived: stats.totalArrived + delta,
+        totalPending: stats.totalPending - delta,
         percentage: (() => {
           const total = stats.totalPersonas;
-          const arrived = newArrived
-            ? stats.totalArrived + personasDelta
-            : stats.totalArrived - personasDelta;
+          const arrived = stats.totalArrived + delta;
           return total > 0 ? Math.round((arrived / total) * 100) : 0;
         })(),
       });
@@ -187,22 +208,22 @@ export default function Home() {
       const res = await fetch('/api/guests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: guest.id }),
+        body: JSON.stringify({ id: guest.id, count }),
       });
       if (!res.ok) {
         setGuests((prev) =>
           prev.map((g) =>
             g.id === guest.id
-              ? { ...g, arrived: guest.arrived, arrivedAt: guest.arrivedAt }
+              ? { ...g, arrived: guest.arrived, arrivedCount: guest.arrivedCount, arrivedAt: guest.arrivedAt }
               : g
           )
         );
         await loadData();
         toast.error('Error al registrar llegada');
       } else {
-        const personaText = guest.invitados === 1 ? 'persona' : 'personas';
         if (newArrived) {
-          toast.success(`💍 ${guest.nombre} — ${guest.invitados} ${personaText} registrada${guest.invitados > 1 ? 's' : ''}`);
+          const personaText = count === 1 ? 'persona' : 'personas';
+          toast.success(`💍 ${guest.nombre} — ${count} ${personaText} registrada${count > 1 ? 's' : ''}`);
         } else {
           toast.info(`↩️ ${guest.nombre} — llegada cancelada`);
         }
@@ -546,7 +567,7 @@ export default function Home() {
                           >
                             {/* Check-in Button */}
                             <button
-                              onClick={() => handleCheckIn(guest)}
+                              onClick={() => openCheckIn(guest)}
                               className={`shrink-0 h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center transition-all duration-300 ${
                                 guest.arrived
                                   ? 'bg-sage hover:bg-sage-dark text-white checkin-glow shadow-lg shadow-sage/30'
@@ -584,13 +605,15 @@ export default function Home() {
                                       : 'bg-rose-light text-rose-deep border border-rose-soft/50'
                                   }`}
                                 >
-                                  {totalPersonas} persona{totalPersonas !== 1 ? 's' : ''}
+                                  {guest.arrived
+                                    ? `${guest.arrivedCount}/${totalPersonas} persona${totalPersonas !== 1 ? 's' : ''}`
+                                    : `${totalPersonas} persona${totalPersonas !== 1 ? 's' : ''}`}
                                 </Badge>
                               </div>
                               {guest.arrived && guest.arrivedAt && (
                                 <p className="text-xs text-sage-dark/70 mt-1 flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
-                                  Llegó a las {formatTime(guest.arrivedAt)}
+                                  Llegaron {guest.arrivedCount} persona{guest.arrivedCount !== 1 ? 's' : ''} a las {formatTime(guest.arrivedAt)}
                                 </p>
                               )}
                             </div>
@@ -608,6 +631,104 @@ export default function Home() {
         {/* Spacer for footer */}
         <div className="h-4" />
       </main>
+
+      {/* ===== CHECK-IN DIALOG ===== */}
+      <Dialog open={checkInGuest !== null} onOpenChange={(open) => { if (!open) setCheckInGuest(null); }}>
+        <DialogContent className="sm:max-w-md rounded-2xl border-rose-soft/30 bg-white p-0 overflow-hidden">
+          <div className="bg-gradient-to-r from-rose-light/40 to-champagne-light/40 px-6 py-4">
+            <DialogHeader className="text-left">
+              <DialogTitle className="text-lg font-semibold text-charcoal flex items-center gap-2">
+                <Heart className="h-5 w-5 text-rose-deep" />
+                Registrar Llegada
+              </DialogTitle>
+              <DialogDescription className="text-warm-gray text-sm mt-1">
+                ¿Cuántas personas llegaron con <span className="font-semibold text-charcoal">{checkInGuest?.nombre}</span>?
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          <div className="px-6 py-5 space-y-5">
+            {/* Counter */}
+            <div className="flex items-center justify-center gap-6">
+              <button
+                onClick={() => setCheckInCount((c) => Math.max(0, c - 1))}
+                className="h-12 w-12 rounded-full border-2 border-rose-soft bg-white text-rose-deep hover:bg-rose-light/50 hover:border-rose-mid flex items-center justify-center transition-all active:scale-95"
+              >
+                <Minus className="h-5 w-5" />
+              </button>
+              <div className="text-center min-w-[80px]">
+                <Input
+                  type="number"
+                  min={0}
+                  value={checkInCount}
+                  onChange={(e) => setCheckInCount(Math.max(0, parseInt(e.target.value) || 0))}
+                  className="h-16 w-20 text-center text-3xl font-bold text-charcoal rounded-xl border-rose-light/60 focus:border-champagne focus:ring-champagne/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+              <button
+                onClick={() => setCheckInCount((c) => c + 1)}
+                className="h-12 w-12 rounded-full border-2 border-sage bg-sage-light text-sage-dark hover:bg-sage hover:text-white flex items-center justify-center transition-all active:scale-95"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Info text */}
+            <div className="text-center space-y-1">
+              <p className="text-sm text-warm-gray">
+                Esperadas: <span className="font-semibold text-charcoal">{checkInGuest?.invitados} persona{checkInGuest && checkInGuest.invitados !== 1 ? 's' : ''}</span>
+              </p>
+              {checkInCount !== checkInGuest?.invitados && (
+                <p className={`text-xs font-medium ${checkInCount > (checkInGuest?.invitados || 0) ? 'text-champagne-dark' : 'text-rose-deep'}`}>
+                  {checkInCount > (checkInGuest?.invitados || 0)
+                    ? `+${checkInCount - (checkInGuest?.invitados || 0)} persona${checkInCount - (checkInGuest?.invitados || 0) !== 1 ? 's' : ''} extra${checkInCount - (checkInGuest?.invitados || 0) !== 1 ? 's' : ''}`
+                    : `${checkInGuest ? (checkInGuest.invitados || 0) - checkInCount : 0} persona${(checkInGuest ? (checkInGuest.invitados || 0) - checkInCount : 0) !== 1 ? 's' : ''} menos`}
+                </p>
+              )}
+            </div>
+
+            {/* Quick buttons */}
+            <div className="flex flex-wrap justify-center gap-2">
+              <button
+                onClick={() => setCheckInCount(checkInGuest?.invitados || 0)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium bg-champagne-light text-champagne-dark hover:bg-champagne hover:text-white transition-all"
+              >
+                Todas ({checkInGuest?.invitados || 0})
+              </button>
+              {checkInGuest && checkInGuest.invitados > 1 && (
+                <button
+                  onClick={() => setCheckInCount(1)}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-rose-light text-rose-deep hover:bg-rose-soft hover:text-white transition-all"
+                >
+                  Solo 1
+                </button>
+              )}
+              <button
+                onClick={() => setCheckInCount(0)}
+                className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-warm-gray hover:bg-gray-200 transition-all"
+              >
+                0 — No llegó
+              </button>
+            </div>
+          </div>
+          <DialogFooter className="px-6 pb-5 pt-0 flex gap-3 sm:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setCheckInGuest(null)}
+              className="flex-1 rounded-full border-rose-soft/40 text-warm-gray hover:text-charcoal hover:bg-rose-light/30 h-11"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => checkInGuest && confirmCheckIn(checkInGuest, checkInCount)}
+              disabled={checkInCount === 0}
+              className="flex-1 bg-gradient-to-r from-sage to-sage-dark text-white hover:opacity-90 rounded-full h-11 font-medium shadow-md disabled:opacity-50"
+            >
+              <Check className="h-4 w-4 mr-1.5" />
+              {checkInCount === 0 ? 'Confirmar' : `Registrar ${checkInCount} persona${checkInCount !== 1 ? 's' : ''}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ===== FOOTER ===== */}
       <footer className="border-t border-rose-light/60 bg-white/60 backdrop-blur-sm mt-auto">

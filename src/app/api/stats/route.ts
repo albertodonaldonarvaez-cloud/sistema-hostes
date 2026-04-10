@@ -7,7 +7,7 @@ export async function GET() {
 
     const totalPersonas = allGuests.reduce((sum, g) => sum + g.invitados, 0);
     const arrivedGuests = allGuests.filter((g) => g.arrived);
-    const totalArrived = arrivedGuests.reduce((sum, g) => sum + g.invitados, 0);
+    const totalArrived = arrivedGuests.reduce((sum, g) => sum + g.arrivedCount, 0);
     const totalPending = totalPersonas - totalArrived;
     const percentage = totalPersonas > 0 ? Math.round((totalArrived / totalPersonas) * 100) : 0;
 
@@ -19,7 +19,7 @@ export async function GET() {
       const current = categoryMap.get(cat) || { total: 0, arrived: 0, pending: 0 };
       current.total += personas;
       if (guest.arrived) {
-        current.arrived += personas;
+        current.arrived += guest.arrivedCount;
       } else {
         current.pending += personas;
       }

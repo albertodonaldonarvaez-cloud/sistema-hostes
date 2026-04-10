@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id } = body;
+    const { id, count } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -59,10 +59,14 @@ export async function POST(req: NextRequest) {
 
     // Toggle arrival
     const newArrived = !guest.arrived;
+    const newArrivedCount = newArrived
+      ? (body.count !== undefined && body.count !== null ? parseInt(body.count) : guest.invitados)
+      : 0;
     const updated = await db.guest.update({
       where: { id },
       data: {
         arrived: newArrived,
+        arrivedCount: newArrivedCount,
         arrivedAt: newArrived ? new Date() : null,
       },
     });
@@ -82,6 +86,7 @@ export async function PATCH() {
     const result = await db.guest.updateMany({
       data: {
         arrived: false,
+        arrivedCount: 0,
         arrivedAt: null,
       },
     });
