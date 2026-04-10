@@ -1,0 +1,17 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: sistema-hostes
+    ports:
+      - "3000:3000"
+    volumes:
+      - guest-data:/app/data
+    environment:
+      - DATABASE_URL=file:/app/data/guests.db
+      - NODE_ENV=production
+    restart: unless-stopped
+
+volumes:
+  guest-data:
