@@ -41,75 +41,90 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Wedding theme custom colors */
+  --color-rose-light: #f5e6e0;
+  --color-rose-soft: #e8b4b8;
+  --color-rose-mid: #d4878e;
+  --color-rose-deep: #b85c64;
+  --color-sage: #a8b5a0;
+  --color-sage-light: #d4ddd0;
+  --color-sage-dark: #7a8d72;
+  --color-champagne: #d4a853;
+  --color-champagne-light: #f0e4c8;
+  --color-champagne-dark: #b8922f;
+  --color-ivory: #faf8f5;
+  --color-charcoal: #2d2d2d;
+  --color-warm-gray: #6b6560;
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 0.75rem;
+  --background: #faf8f5;
+  --foreground: #2d2d2d;
+  --card: #ffffff;
+  --card-foreground: #2d2d2d;
+  --popover: #ffffff;
+  --popover-foreground: #2d2d2d;
+  --primary: #b85c64;
+  --primary-foreground: #ffffff;
+  --secondary: #f5e6e0;
+  --secondary-foreground: #2d2d2d;
+  --muted: #f5e6e0;
+  --muted-foreground: #6b6560;
+  --accent: #d4a853;
+  --accent-foreground: #2d2d2d;
+  --destructive: #dc4444;
+  --border: #e8ddd5;
+  --input: #e8ddd5;
+  --ring: #d4a853;
+  --chart-1: #e8b4b8;
+  --chart-2: #a8b5a0;
+  --chart-3: #d4a853;
+  --chart-4: #d4878e;
+  --chart-5: #7a8d72;
+  --sidebar: #faf8f5;
+  --sidebar-foreground: #2d2d2d;
+  --sidebar-primary: #b85c64;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5e6e0;
+  --sidebar-accent-foreground: #2d2d2d;
+  --sidebar-border: #e8ddd5;
+  --sidebar-ring: #d4a853;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #1a1714;
+  --foreground: #f5e6e0;
+  --card: #252119;
+  --card-foreground: #f5e6e0;
+  --popover: #252119;
+  --popover-foreground: #f5e6e0;
+  --primary: #e8b4b8;
+  --primary-foreground: #2d2d2d;
+  --secondary: #2d2520;
+  --secondary-foreground: #f5e6e0;
+  --muted: #2d2520;
+  --muted-foreground: #a8998e;
+  --accent: #d4a853;
+  --accent-foreground: #2d2d2d;
+  --destructive: #f87171;
+  --border: #3d352d;
+  --input: #3d352d;
+  --ring: #d4a853;
+  --chart-1: #e8b4b8;
+  --chart-2: #a8b5a0;
+  --chart-3: #d4a853;
+  --chart-4: #d4878e;
+  --chart-5: #7a8d72;
+  --sidebar: #1a1714;
+  --sidebar-foreground: #f5e6e0;
+  --sidebar-primary: #e8b4b8;
+  --sidebar-primary-foreground: #2d2d2d;
+  --sidebar-accent: #2d2520;
+  --sidebar-accent-foreground: #f5e6e0;
+  --sidebar-border: #3d352d;
+  --sidebar-ring: #d4a853;
 }
 
 @layer base {
@@ -119,4 +134,195 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Wedding theme custom styles */
+
+/* Elegant progress bar */
+.wedding-progress {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #f5e6e0 0%, #e8ddd5 100%);
+}
+
+.wedding-progress-bar {
+  background: linear-gradient(135deg, #e8b4b8 0%, #d4a853 100%);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 9999px;
+}
+
+.wedding-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+/* Card hover animation */
+.wedding-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wedding-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(212, 168, 83, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* Check-in button animations */
+.checkin-pulse {
+  animation: pulse-rose 0.6s ease-out;
+}
+
+.checkin-glow {
+  box-shadow: 0 0 0 0 rgba(168, 181, 160, 0.5);
+  animation: glow-sage 1.5s ease-in-out infinite;
+}
+
+/* Floral divider */
+.floral-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.floral-divider::before,
+.floral-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    #e8b4b8,
+    #d4a853,
+    #e8b4b8,
+    transparent
+  );
+}
+
+/* Fade in animation */
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+/* Staggered children animation */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeInUp 0.4s ease-out both;
+}
+
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
+
+/* Header gradient */
+.wedding-header-bg {
+  background: linear-gradient(
+    180deg,
+    #faf8f5 0%,
+    #fdf5f2 30%,
+    #f5e6e0 70%,
+    #faf8f5 100%
+  );
+}
+
+/* Scrollbar styling */
+.wedding-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.wedding-scrollbar::-webkit-scrollbar-track {
+  background: #f5e6e0;
+  border-radius: 9999px;
+}
+
+.wedding-scrollbar::-webkit-scrollbar-thumb {
+  background: #e8b4b8;
+  border-radius: 9999px;
+}
+
+.wedding-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d4878e;
+}
+
+/* Keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-rose {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes glow-sage {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(168, 181, 160, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(168, 181, 160, 0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Elegant script font using Google Fonts fallback */
+.font-elegant {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* Pill button styles */
+.pill-btn {
+  transition: all 0.2s ease;
+}
+
+.pill-btn:hover {
+  transform: scale(1.03);
+}
+
+.pill-btn-active {
+  background: linear-gradient(135deg, #e8b4b8, #d4a853);
+  color: white;
+  box-shadow: 0 2px 8px rgba(212, 168, 83, 0.3);
 }

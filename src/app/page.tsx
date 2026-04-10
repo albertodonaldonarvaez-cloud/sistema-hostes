@@ -6,31 +6,25 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { Separator } from '@/components/ui/separator';
 import {
   Search,
-  CheckCircle2,
-  Clock,
+  Check,
   Users,
-  UserCheck,
-  RotateCcw,
+  Clock,
   ChevronDown,
+  RotateCcw,
+  Heart,
+  Sparkles,
   Database,
   PartyPopper,
   AlertCircle,
+  UserCheck,
 } from 'lucide-react';
 
 interface Guest {
@@ -62,16 +56,18 @@ interface Stats {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  'Familia Hdez': 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200',
-  'Fam. Estrada': 'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-200',
-  'DIF': 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200',
-  'Maestros': 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200',
-  'P': 'bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200',
-  'Palomita': 'bg-pink-100 text-pink-800 dark:bg-pink-950 dark:text-pink-200',
+  'Familia Hdez': 'bg-rose-light text-rose-deep border border-rose-soft/40',
+  'Fam. Estrada': 'bg-champagne-light text-champagne-dark border border-champagne/30',
+  'DIF': 'bg-sage-light text-sage-dark border border-sage/30',
+  'Maestros': 'bg-[#fce8e8] text-[#b85c64] border border-[#e8b4b8]/40',
+  'P': 'bg-[#fff8e8] text-[#b8922f] border border-[#d4a853]/30',
+  'Palomita': 'bg-[#f0e8f8] text-[#7a5d8e] border border-[#c4a8d8]/30',
+  'Policía': 'bg-[#e8f0f8] text-[#4a6d8e] border border-[#8eb4d8]/30',
+  'Familia y Amigos': 'bg-[#f5e6e0] text-[#8e6b62] border border-[#d4a8a0]/30',
 };
 
 function getCategoryColor(cat: string): string {
-  return CATEGORY_COLORS[cat] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+  return CATEGORY_COLORS[cat] || 'bg-[#f5e6e0] text-[#8e6b62] border border-[#d4a8a0]/30';
 }
 
 export default function Home() {
@@ -84,6 +80,7 @@ export default function Home() {
   const [seeding, setSeeding] = useState(false);
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
   const [categories, setCategories] = useState<string[]>([]);
+  const [animatingId, setAnimatingId] = useState<string | null>(null);
 
   const fetchGuests = useCallback(async () => {
     try {
@@ -108,10 +105,8 @@ export default function Home() {
       if (res.ok) {
         const data = await res.json();
         setStats(data);
-        // Extract categories for filter
         const cats = data.categories.map((c: { name: string }) => c.name).sort();
         setCategories(cats);
-        // Open all categories by default
         const open: Record<string, boolean> = {};
         cats.forEach((c: string) => { open[c] = true; });
         setOpenCategories(open);
@@ -137,7 +132,7 @@ export default function Home() {
       const res = await fetch('/api/seed', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
-        toast.success(`Base de datos actualizada: ${data.stats.created} nuevos, ${data.stats.updated} actualizados`);
+        toast.success(`✨ Datos cargados: ${data.stats.created} invitados registrados`);
         await loadData();
       } else {
         toast.error('Error al cargar datos');
@@ -150,10 +145,16 @@ export default function Home() {
   };
 
   const handleCheckIn = async (guest: Guest) => {
-    // Optimistic update
     const newArrived = !guest.arrived;
     const newArrivedAt = newArrived ? new Date().toISOString() : null;
 
+    // Trigger animation
+    if (newArrived) {
+      setAnimatingId(guest.id);
+      setTimeout(() => setAnimatingId(null), 600);
+    }
+
+    // Optimistic update
     setGuests((prev) =>
       prev.map((g) =>
         g.id === guest.id
@@ -162,7 +163,6 @@ export default function Home() {
       )
     );
 
-    // Update stats optimistically
     if (stats) {
       const personasDelta = guest.invitados + 1;
       setStats({
@@ -190,7 +190,6 @@ export default function Home() {
         body: JSON.stringify({ id: guest.id }),
       });
       if (!res.ok) {
-        // Revert on error
         setGuests((prev) =>
           prev.map((g) =>
             g.id === guest.id
@@ -203,9 +202,9 @@ export default function Home() {
       } else {
         const personaText = guest.invitados + 1 === 1 ? 'persona' : 'personas';
         if (newArrived) {
-          toast.success(`✅ ${guest.nombre} - ${guest.invitados + 1} ${personaText} registrada${guest.invitados + 1 > 1 ? 's' : ''}`);
+          toast.success(`💍 ${guest.nombre} — ${guest.invitados + 1} ${personaText} registrada${guest.invitados + 1 > 1 ? 's' : ''}`);
         } else {
-          toast.info(`↩️ ${guest.nombre} - llegada cancelada`);
+          toast.info(`↩️ ${guest.nombre} — llegada cancelada`);
         }
       }
     } catch {
@@ -232,17 +231,14 @@ export default function Home() {
 
   // Group guests by category
   const groupedGuests: Record<string, Guest[]> = {};
-  const filteredGuests = guests.filter((g) => g.activo);
-
-  for (const guest of filteredGuests) {
-    const cat = guest.categoria || 'Sin Categoría';
+  for (const guest of guests) {
+    const cat = guest.categoria || 'Familia y Amigos';
     if (!groupedGuests[cat]) groupedGuests[cat] = [];
     groupedGuests[cat].push(guest);
   }
 
   const sortedCategories = Object.keys(groupedGuests).sort();
 
-  // Compute per-category arrived count
   const getCategoryArrived = (cat: string, guestsList: Guest[]): { arrived: number; totalPersonas: number } => {
     const arrived = guestsList.filter((g) => g.arrived).length;
     const totalPersonas = guestsList.reduce((s, g) => s + g.invitados + 1, 0);
@@ -255,15 +251,24 @@ export default function Home() {
     return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Loading state
   if (loading && !stats) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-white to-rose-50">
-        <div className="text-center space-y-4">
-          <PartyPopper className="h-12 w-12 mx-auto text-amber-500 animate-bounce" />
-          <p className="text-lg text-muted-foreground">Cargando...</p>
-          <Button onClick={handleSeed} disabled={seeding} variant="outline">
+      <div className="min-h-screen flex items-center justify-center bg-ivory">
+        <div className="text-center space-y-6 fade-in-up">
+          <div className="relative">
+            <div className="text-6xl mb-4 animate-bounce">💍</div>
+            <Sparkles className="absolute -top-2 -right-4 h-5 w-5 text-champagne animate-pulse" />
+          </div>
+          <h2 className="text-2xl font-elegant text-rose-deep">Nuestra Boda</h2>
+          <p className="text-warm-gray">Preparando todo para el gran día...</p>
+          <Button
+            onClick={handleSeed}
+            disabled={seeding}
+            className="mt-4 bg-gradient-to-r from-rose-soft to-champagne text-white hover:from-rose-mid hover:to-champagne-dark transition-all duration-300 rounded-full px-8 shadow-lg"
+          >
             <Database className="h-4 w-4 mr-2" />
-            {seeding ? 'Cargando datos...' : 'Cargar datos CSV'}
+            {seeding ? 'Cargando invitados...' : 'Cargar Lista de Invitados'}
           </Button>
         </div>
       </div>
@@ -271,163 +276,217 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-amber-50 via-white to-rose-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-600 to-rose-500 bg-clip-text text-transparent">
-                🎉 Control de Invitados
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Registro de llegadas en tiempo real
-              </p>
+    <div className="min-h-screen flex flex-col bg-ivory">
+      {/* ===== HEADER ===== */}
+      <header className="wedding-header-bg sticky top-0 z-50 border-b border-rose-light">
+        <div className="max-w-4xl mx-auto px-4 py-5 sm:py-6">
+          <div className="text-center space-y-2">
+            {/* Decorative top */}
+            <div className="flex items-center justify-center gap-2 text-champagne text-sm">
+              <span>✦</span>
+              <span>✦</span>
+              <span>✦</span>
             </div>
-            <Button
-              onClick={handleSeed}
-              disabled={seeding}
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-            >
-              <Database className="h-4 w-4 mr-2" />
-              {seeding ? 'Actualizando...' : 'Actualizar Datos'}
-            </Button>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-elegant text-rose-deep">
+              Nuestra Boda
+            </h1>
+
+            {/* Floral divider */}
+            <div className="floral-divider max-w-xs mx-auto">
+              <Heart className="h-4 w-4 text-rose-soft shrink-0" />
+            </div>
+
+            <p className="text-sm sm:text-base text-warm-gray tracking-wide">
+              Registro de Invitados
+            </p>
+
+            {/* Action buttons */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <Button
+                onClick={handleSeed}
+                disabled={seeding}
+                size="sm"
+                className="bg-gradient-to-r from-champagne-light to-champagne text-charcoal hover:from-champagne hover:to-champagne-dark hover:text-white rounded-full px-5 transition-all duration-300 text-xs font-medium shadow-sm"
+              >
+                <Database className="h-3.5 w-3.5 mr-1.5" />
+                {seeding ? 'Actualizando...' : 'Actualizar Datos'}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 space-y-6">
-        {/* Stats Dashboard */}
+        {/* ===== STATS DASHBOARD ===== */}
         {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <Card className="border-2 border-sky-200 dark:border-sky-800">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Users className="h-5 w-5 text-sky-500" />
-                  <span className="text-xs font-medium text-muted-foreground">Total Personas</span>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 fade-in-up stagger-children">
+            {/* Total Personas */}
+            <Card className="wedding-card rounded-2xl border border-rose-soft/30 bg-white shadow-sm overflow-hidden">
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-lg bg-rose-light">
+                    <Users className="h-4 w-4 text-rose-deep" />
+                  </div>
+                  <span className="text-xs font-medium text-warm-gray">Total Invitados</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-sky-700 dark:text-sky-300">
+                <p className="text-2xl sm:text-3xl font-bold text-charcoal">
                   {stats.totalPersonas}
                 </p>
+                <p className="text-xs text-warm-gray mt-1">{stats.totalInvitados} grupos</p>
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-emerald-200 dark:border-emerald-800">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <UserCheck className="h-5 w-5 text-emerald-500" />
-                  <span className="text-xs font-medium text-muted-foreground">Llegaron</span>
+            {/* Llegaron */}
+            <Card className="wedding-card rounded-2xl border border-sage/30 bg-white shadow-sm overflow-hidden">
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-lg bg-sage-light">
+                    <UserCheck className="h-4 w-4 text-sage-dark" />
+                  </div>
+                  <span className="text-xs font-medium text-warm-gray">Han Llegado</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-emerald-700 dark:text-emerald-300">
+                <p className="text-2xl sm:text-3xl font-bold text-sage-dark">
                   {stats.totalArrived}
                 </p>
+                <p className="text-xs text-warm-gray mt-1">personas presentes</p>
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-amber-200 dark:border-amber-800">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <Clock className="h-5 w-5 text-amber-500" />
-                  <span className="text-xs font-medium text-muted-foreground">Pendientes</span>
+            {/* Pendientes */}
+            <Card className="wedding-card rounded-2xl border border-champagne/30 bg-white shadow-sm overflow-hidden">
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-lg bg-champagne-light">
+                    <Clock className="h-4 w-4 text-champagne-dark" />
+                  </div>
+                  <span className="text-xs font-medium text-warm-gray">Pendientes</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-amber-700 dark:text-amber-300">
+                <p className="text-2xl sm:text-3xl font-bold text-champagne-dark">
                   {stats.totalPending}
                 </p>
+                <p className="text-xs text-warm-gray mt-1">por llegar</p>
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-rose-200 dark:border-rose-800">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <CheckCircle2 className="h-5 w-5 text-rose-500" />
-                  <span className="text-xs font-medium text-muted-foreground">% Llegados</span>
+            {/* Progreso */}
+            <Card className="wedding-card rounded-2xl border border-rose-soft/30 bg-white shadow-sm overflow-hidden">
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-lg bg-rose-light">
+                    <Sparkles className="h-4 w-4 text-rose-deep" />
+                  </div>
+                  <span className="text-xs font-medium text-warm-gray">Progreso</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-rose-700 dark:text-rose-300">
+                <p className="text-2xl sm:text-3xl font-bold text-rose-deep">
                   {stats.percentage}%
                 </p>
-                <Progress
-                  value={stats.percentage}
-                  className="mt-2 h-2"
-                />
+                <div className="mt-2 wedding-progress h-2.5">
+                  <div
+                    className="wedding-progress-bar h-full"
+                    style={{ width: `${stats.percentage}%` }}
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
         )}
 
-        {/* Search & Filter Bar */}
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nombre..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Select
-                value={categoriaFilter}
-                onValueChange={setCategoriaFilter}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las categorías</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={statusFilter}
-                onValueChange={setStatusFilter}
-              >
-                <SelectTrigger className="w-full sm:w-[160px]">
-                  <SelectValue placeholder="Estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="arrived">Llegaron</SelectItem>
-                  <SelectItem value="pending">Pendientes</SelectItem>
-                </SelectContent>
-              </Select>
+        {/* ===== SEARCH & FILTERS ===== */}
+        <Card className="rounded-2xl border border-rose-soft/20 bg-white/80 backdrop-blur-sm shadow-sm fade-in-up">
+          <CardContent className="p-4 sm:p-5 space-y-4">
+            {/* Search bar */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray" />
+              <Input
+                placeholder="Buscar por nombre..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 h-12 rounded-xl border-rose-light/60 bg-ivory/50 focus:border-champagne focus:ring-champagne/20 text-charcoal placeholder:text-warm-gray/70"
+              />
             </div>
-            <div className="flex justify-end">
+
+            {/* Category pills */}
+            <div className="space-y-3">
+              <p className="text-xs font-medium text-warm-gray uppercase tracking-wider">Categoría</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setCategoriaFilter('all')}
+                  className={`pill-btn px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                    categoriaFilter === 'all'
+                      ? 'pill-btn-active border-transparent'
+                      : 'border-rose-soft/40 text-warm-gray hover:border-rose-soft hover:text-rose-deep bg-white'
+                  }`}
+                >
+                  Todas
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoriaFilter(categoriaFilter === cat ? 'all' : cat)}
+                    className={`pill-btn px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      categoriaFilter === cat
+                        ? 'pill-btn-active border-transparent'
+                        : 'border-rose-soft/40 text-warm-gray hover:border-rose-soft hover:text-rose-deep bg-white'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Status pills + Reset */}
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex gap-2">
+                {[
+                  { key: 'all', label: 'Todos', icon: Users },
+                  { key: 'arrived', label: 'Llegaron', icon: Check },
+                  { key: 'pending', label: 'Pendientes', icon: Clock },
+                ].map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setStatusFilter(key)}
+                    className={`pill-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      statusFilter === key
+                        ? 'pill-btn-active border-transparent'
+                        : 'border-rose-soft/40 text-warm-gray hover:border-rose-soft hover:text-rose-deep bg-white'
+                    }`}
+                  >
+                    <Icon className="h-3 w-3" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleReset}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="text-warm-gray hover:text-rose-deep hover:bg-rose-light rounded-full text-xs"
               >
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reiniciar Llegadas
+                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                Reiniciar
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Guest List */}
-        <div className="space-y-4">
+        {/* ===== GUEST LIST ===== */}
+        <div className="space-y-4 fade-in-up">
           {sortedCategories.length === 0 && !loading && (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No se encontraron invitados</p>
+            <Card className="rounded-2xl border border-rose-soft/20 bg-white/80 shadow-sm">
+              <CardContent className="p-8 text-center space-y-4">
+                <div className="text-5xl mb-2">💍</div>
+                <p className="text-warm-gray font-medium">No se encontraron invitados</p>
+                <p className="text-xs text-warm-gray/70">Carga la lista de invitados para comenzar</p>
                 <Button
                   onClick={handleSeed}
-                  className="mt-4"
-                  variant="outline"
-                  size="sm"
+                  disabled={seeding}
+                  className="mt-2 bg-gradient-to-r from-rose-soft to-champagne text-white hover:from-rose-mid hover:to-champagne-dark rounded-full px-6 transition-all duration-300 shadow-md"
                 >
                   <Database className="h-4 w-4 mr-2" />
-                  Cargar datos CSV
+                  {seeding ? 'Cargando...' : 'Cargar Lista'}
                 </Button>
               </CardContent>
             </Card>
@@ -444,19 +503,25 @@ export default function Home() {
                 open={isOpen}
                 onOpenChange={() => toggleCategory(cat)}
               >
-                <Card>
+                <Card className="wedding-card rounded-2xl border border-rose-soft/20 bg-white/90 shadow-sm overflow-hidden">
                   <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center justify-between p-4 hover:bg-accent/50 transition-colors rounded-lg">
+                    <div className="flex items-center justify-between p-4 sm:p-5 hover:bg-rose-light/30 transition-colors">
                       <div className="flex items-center gap-3">
-                        <Badge variant="secondary" className={getCategoryColor(cat)}>
+                        <Badge
+                          variant="outline"
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${getCategoryColor(cat)}`}
+                        >
                           {cat}
                         </Badge>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-warm-gray hidden sm:inline">
                           {catArrivedCount}/{catGuests.length} llegados · {catTotalPersonas} personas
+                        </span>
+                        <span className="text-sm text-warm-gray sm:hidden">
+                          {catArrivedCount}/{catGuests.length}
                         </span>
                       </div>
                       <ChevronDown
-                        className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${
+                        className={`h-5 w-5 text-warm-gray transition-transform duration-300 ${
                           isOpen ? 'rotate-180' : ''
                         }`}
                       />
@@ -464,69 +529,74 @@ export default function Home() {
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    <Separator />
-                    <div className="p-3 sm:p-4 space-y-2">
-                      {catGuests.map((guest) => (
-                        <div
-                          key={guest.id}
-                          className={`flex items-center gap-3 p-3 rounded-lg border transition-all duration-200 ${
-                            guest.arrived
-                              ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800'
-                              : 'bg-white dark:bg-gray-900 border-border hover:border-amber-300 dark:hover:border-amber-700'
-                          }`}
-                        >
-                          {/* Check-in Button */}
-                          <Button
-                            onClick={() => handleCheckIn(guest)}
-                            className={`shrink-0 h-12 w-12 rounded-full p-0 transition-all duration-200 ${
-                              guest.arrived
-                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-200 dark:shadow-emerald-900'
-                                : 'bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-950 dark:hover:bg-amber-900 dark:text-amber-300'
-                            }`}
-                            aria-label={
-                              guest.arrived
-                                ? `Cancelar llegada de ${guest.nombre}`
-                                : `Registrar llegada de ${guest.nombre}`
-                            }
-                          >
-                            {guest.arrived ? (
-                              <CheckCircle2 className="h-6 w-6" />
-                            ) : (
-                              <Clock className="h-6 w-6" />
-                            )}
-                          </Button>
+                    <Separator className="bg-rose-light/50" />
+                    <div className="p-3 sm:p-4 space-y-2 max-h-[70vh] overflow-y-auto wedding-scrollbar">
+                      {catGuests.map((guest) => {
+                        const totalPersonas = guest.invitados + 1;
+                        const isAnimating = animatingId === guest.id;
 
-                          {/* Guest Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span
-                                className={`font-semibold text-base ${
-                                  guest.arrived
-                                    ? 'text-emerald-800 dark:text-emerald-200'
-                                    : 'text-foreground'
-                                }`}
-                              >
-                                {guest.nombre}
-                              </span>
-                              <Badge
-                                variant={guest.arrived ? 'default' : 'secondary'}
-                                className={
-                                  guest.arrived
-                                    ? 'bg-emerald-600 text-white text-xs'
-                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 text-xs'
-                                }
-                              >
-                                {guest.invitados + 1} persona{guest.invitados + 1 !== 1 ? 's' : ''}
-                              </Badge>
+                        return (
+                          <div
+                            key={guest.id}
+                            className={`flex items-center gap-3 p-3 sm:p-4 rounded-xl border transition-all duration-300 ${
+                              guest.arrived
+                                ? 'bg-sage-light/50 border-sage/30 shadow-sm'
+                                : 'bg-white border-rose-soft/20 hover:border-champagne/40 hover:shadow-sm'
+                            } ${isAnimating ? 'scale-[1.02]' : ''}`}
+                          >
+                            {/* Check-in Button */}
+                            <button
+                              onClick={() => handleCheckIn(guest)}
+                              className={`shrink-0 h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                guest.arrived
+                                  ? 'bg-sage hover:bg-sage-dark text-white checkin-glow shadow-lg shadow-sage/30'
+                                  : 'bg-white border-2 border-rose-soft text-rose-deep hover:border-rose-mid hover:bg-rose-light/50 shadow-sm'
+                              } ${isAnimating ? 'checkin-pulse' : ''}`}
+                              aria-label={
+                                guest.arrived
+                                  ? `Cancelar llegada de ${guest.nombre}`
+                                  : `Registrar llegada de ${guest.nombre}`
+                              }
+                            >
+                              {guest.arrived ? (
+                                <Check className="h-5 w-5 sm:h-6 sm:w-6" />
+                              ) : (
+                                <Heart className="h-5 w-5 sm:h-6 sm:w-6" />
+                              )}
+                            </button>
+
+                            {/* Guest Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span
+                                  className={`font-semibold text-base sm:text-lg transition-colors ${
+                                    guest.arrived
+                                      ? 'text-sage-dark'
+                                      : 'text-charcoal'
+                                  }`}
+                                >
+                                  {guest.nombre}
+                                </span>
+                                <Badge
+                                  className={`rounded-full text-xs font-medium px-2.5 py-0.5 ${
+                                    guest.arrived
+                                      ? 'bg-sage/80 text-white border-0'
+                                      : 'bg-rose-light text-rose-deep border border-rose-soft/50'
+                                  }`}
+                                >
+                                  {totalPersonas} persona{totalPersonas !== 1 ? 's' : ''}
+                                </Badge>
+                              </div>
+                              {guest.arrived && guest.arrivedAt && (
+                                <p className="text-xs text-sage-dark/70 mt-1 flex items-center gap-1">
+                                  <Clock className="h-3 w-3" />
+                                  Llegó a las {formatTime(guest.arrivedAt)}
+                                </p>
+                              )}
                             </div>
-                            {guest.arrived && guest.arrivedAt && (
-                              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">
-                                Llegó a las {formatTime(guest.arrivedAt)}
-                              </p>
-                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </CollapsibleContent>
                 </Card>
@@ -534,22 +604,44 @@ export default function Home() {
             );
           })}
         </div>
+
+        {/* Spacer for footer */}
+        <div className="h-4" />
       </main>
 
-      {/* Footer */}
-      <footer className="border-t bg-white/80 dark:bg-gray-900/80 backdrop-blur-md mt-auto">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+      {/* ===== FOOTER ===== */}
+      <footer className="border-t border-rose-light/60 bg-white/60 backdrop-blur-sm mt-auto">
+        <div className="max-w-4xl mx-auto px-4 py-6">
           {stats && (
-            <div className="text-center space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                📊 {stats.totalArrived} de {stats.totalPersonas} personas han llegado{' '}
-                <span className="text-amber-600 dark:text-amber-400 font-bold">({stats.percentage}%)</span>
+            <div className="text-center space-y-3 mb-4">
+              <div className="flex items-center justify-center gap-2 text-champagne text-sm">
+                <span>✦</span>
+                <span>✦</span>
+                <span>✦</span>
+              </div>
+              <p className="text-sm font-medium text-warm-gray">
+                {stats.totalArrived} de {stats.totalPersonas} personas han llegado
               </p>
-              <Progress value={stats.percentage} className="h-3 max-w-md mx-auto" />
+              <div className="wedding-progress h-3 max-w-sm mx-auto">
+                <div
+                  className="wedding-progress-bar h-full"
+                  style={{ width: `${stats.percentage}%` }}
+                />
+              </div>
+              {stats.percentage === 100 && (
+                <div className="flex items-center justify-center gap-2 text-sage-dark">
+                  <PartyPopper className="h-5 w-5" />
+                  <span className="text-sm font-semibold">¡Todos han llegado!</span>
+                  <PartyPopper className="h-5 w-5" />
+                </div>
+              )}
             </div>
           )}
-          <p className="text-center text-xs text-muted-foreground mt-2">
-            Control de Invitados · {new Date().getFullYear()}
+          <div className="floral-divider max-w-xs mx-auto mb-3">
+            <Heart className="h-3.5 w-3.5 text-rose-soft shrink-0" />
+          </div>
+          <p className="text-center text-xs text-warm-gray/70 font-elegant">
+            Con amor, en nuestro día más especial 💕
           </p>
         </div>
       </footer>

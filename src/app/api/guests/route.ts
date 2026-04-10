@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     const categoria = searchParams.get("categoria") || "";
     const arrived = searchParams.get("arrived") || "";
 
-    const where: Record<string, unknown> = { activo: true };
+    const where: Record<string, unknown> = {};
 
     if (search) {
       where.nombre = { contains: search };
@@ -80,7 +80,6 @@ export async function POST(req: NextRequest) {
 export async function PATCH() {
   try {
     const result = await db.guest.updateMany({
-      where: { activo: true },
       data: {
         arrived: false,
         arrivedAt: null,

@@ -2,83 +2,88 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { readFile } from "fs/promises";
 import { join } from "path";
+import * as XLSX from "xlsx";
 
-function cleanCategoria(raw: string): string | null {
-  let cat = raw.trim();
-  if (!cat) return null;
+function cleanCategoria(raw: string | undefined | null): string {
+  if (!raw) return "Familia y Amigos";
 
-  // Check for cancelled/tachado in the raw category
-  const lower = cat.toLowerCase();
-  if (lower.includes("tachado") || lower.includes("cancelado")) {
-    return null;
-  }
+  let cat = String(raw).trim();
 
-  // Clean up: strip trailing " - P" and leading "P - " and trailing " - ya"
+  // Normalize specific categories
+  if (cat.toLowerCase() === "maestros - p") return "Maestros";
+  if (cat.toLowerCase() === "policia") return "Policía";
+
+  // Strip trailing " - P", leading "P - ", trailing " - ya"
   cat = cat.replace(/\s*-\s*P$/i, "");
   cat = cat.replace(/^P\s*-\s*/i, "");
   cat = cat.replace(/\s*-\s*ya$/i, "");
   cat = cat.trim();
 
-  return cat || null;
+  // Empty string → default
+  if (!cat || cat.toLowerCase() === "(empty)") return "Familia y Amigos";
+
+  return cat;
 }
 
 export async function POST() {
   try {
-    const csvPath = join(process.cwd(), "upload", "invitados.csv");
-    const csvContent = await readFile(csvPath, "utf-8");
+    const xlsxPath = join(process.cwd(), "upload", "invitados.xlsx");
+    const buffer = await readFile(xlsxPath);
 
-    const lines = csvContent.split("\n").filter((l) => l.trim());
-    // Skip header
-    const dataLines = lines.slice(1);
+    // Read the workbook
+    const workbook = XLSX.read(buffer, { type: "buffer" });
+
+    // Get the "invitados" sheet
+    const sheetName = "invitados";
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) {
+      return NextResponse.json(
+        { success: false, error: `Hoja "${sheetName}" no encontrada` },
+        { status: 500 }
+      );
+    }
+
+    // Convert to JSON (skip header row)
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+      header: 1,
+    }) as unknown[][];
+
+    // Skip header (first row)
+    const dataRows = rows.slice(1);
+
+    // Clear existing data
+    await db.guest.deleteMany({});
 
     let created = 0;
-    let updated = 0;
     let skipped = 0;
 
-    for (const line of dataLines) {
-      // Parse CSV - handle potential commas in names (but our CSV seems simple)
-      const parts = line.split(",");
-      if (parts.length < 2) continue;
+    for (const row of dataRows) {
+      const nombre = String(row[0] ?? "").trim();
+      const invitadosStr = String(row[1] ?? "").trim();
+      const categoriaRaw = row[2] != null ? String(row[2]) : "";
 
-      const nombre = parts[0].trim();
-      const invitadosStr = parts[1].trim();
-      const categoriaRaw = parts.length > 2 ? parts.slice(2).join(",").trim() : "";
-
-      if (!nombre) continue;
+      if (!nombre) {
+        skipped++;
+        continue;
+      }
 
       const invitados = parseInt(invitadosStr, 10);
-      if (isNaN(invitados)) continue;
-
-      // Check if inactive
-      const isActive = invitados > 0 && !categoriaRaw.toLowerCase().includes("tachado") && !categoriaRaw.toLowerCase().includes("cancelado");
-
-      // Clean category
-      const categoria = cleanCategoria(categoriaRaw) || "Sin Categoría";
-
-      // Upsert
-      const existing = await db.guest.findFirst({ where: { nombre } });
-
-      if (existing) {
-        await db.guest.update({
-          where: { id: existing.id },
-          data: {
-            invitados,
-            categoria,
-            activo: isActive,
-          },
-        });
-        updated++;
-      } else {
-        await db.guest.create({
-          data: {
-            nombre,
-            invitados,
-            categoria,
-            activo: isActive,
-          },
-        });
-        created++;
+      if (isNaN(invitados)) {
+        skipped++;
+        continue;
       }
+
+      const categoria = cleanCategoria(categoriaRaw);
+
+      await db.guest.create({
+        data: {
+          nombre,
+          invitados,
+          categoria,
+          activo: true,
+        },
+      });
+      created++;
     }
 
     const total = await db.guest.count();
@@ -88,7 +93,7 @@ export async function POST() {
       success: true,
       stats: {
         created,
-        updated,
+        updated: 0,
         skipped,
         total,
         active,
@@ -97,7 +102,7 @@ export async function POST() {
   } catch (error) {
     console.error("Seed error:", error);
     return NextResponse.json(
-      { success: false, error: "Error al procesar el archivo CSV" },
+      { success: false, error: "Error al procesar el archivo XLSX" },
       { status: 500 }
     );
   }

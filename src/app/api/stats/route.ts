@@ -3,19 +3,17 @@ import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    const activeGuests = await db.guest.findMany({
-      where: { activo: true },
-    });
+    const allGuests = await db.guest.findMany();
 
-    const totalPersonas = activeGuests.reduce((sum, g) => sum + g.invitados + 1, 0);
-    const arrivedGuests = activeGuests.filter((g) => g.arrived);
+    const totalPersonas = allGuests.reduce((sum, g) => sum + g.invitados + 1, 0);
+    const arrivedGuests = allGuests.filter((g) => g.arrived);
     const totalArrived = arrivedGuests.reduce((sum, g) => sum + g.invitados + 1, 0);
     const totalPending = totalPersonas - totalArrived;
     const percentage = totalPersonas > 0 ? Math.round((totalArrived / totalPersonas) * 100) : 0;
 
     // Breakdown by category
     const categoryMap = new Map<string, { total: number; arrived: number; pending: number }>();
-    for (const guest of activeGuests) {
+    for (const guest of allGuests) {
       const personas = guest.invitados + 1;
       const cat = guest.categoria;
       const current = categoryMap.get(cat) || { total: 0, arrived: 0, pending: 0 };
@@ -39,7 +37,7 @@ export async function GET() {
       totalArrived,
       totalPending,
       percentage,
-      totalInvitados: activeGuests.length,
+      totalInvitados: allGuests.length,
       categories,
     });
   } catch (error) {

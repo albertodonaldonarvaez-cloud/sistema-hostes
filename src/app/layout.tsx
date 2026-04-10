@@ -14,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Control de Invitados",
-  description: "Sistema de control de llegadas para eventos",
+  title: "💍 Nuestra Boda — Registro de Invitados",
+  description: "Sistema de registro de llegadas para nuestra boda",
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/favicon.ico",
   },
 };
 
