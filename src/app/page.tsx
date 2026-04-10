@@ -13,10 +13,8 @@ import {
   Users,
   Clock,
   ChevronDown,
-  RotateCcw,
   Heart,
   Sparkles,
-  Database,
   PartyPopper,
   UserCheck,
   Plus,
@@ -158,7 +156,6 @@ export default function Home() {
   const [categoriaFilter, setCategoriaFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
   const [categories, setCategories] = useState<string[]>([]);
   const [animatingId, setAnimatingId] = useState<string | null>(null);
@@ -208,24 +205,6 @@ export default function Home() {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      const res = await fetch('/api/seed', { method: 'POST' });
-      if (res.ok) {
-        const data = await res.json();
-        toast.success(`✨ Datos cargados: ${data.stats.created} invitados registrados`);
-        await loadData();
-      } else {
-        toast.error('Error al cargar datos');
-      }
-    } catch {
-      toast.error('Error de conexión');
-    } finally {
-      setSeeding(false);
-    }
-  };
 
   const openCheckIn = (guest: Guest) => {
     setCheckInGuest(guest);
@@ -301,18 +280,6 @@ export default function Home() {
     }
   };
 
-  const handleReset = async () => {
-    try {
-      const res = await fetch('/api/guests', { method: 'PATCH' });
-      if (res.ok) {
-        toast.success('Todas las llegadas han sido reiniciadas');
-        await loadData();
-      }
-    } catch {
-      toast.error('Error al reiniciar llegadas');
-    }
-  };
-
   const toggleCategory = (cat: string) => {
     setOpenCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
   };
@@ -350,15 +317,13 @@ export default function Home() {
             <Sparkles className="absolute -top-2 -right-4 h-5 w-5 text-champagne animate-pulse" />
           </div>
           <h2 className="text-2xl font-elegant text-rose-deep">Nuestra Boda</h2>
-          <p className="text-warm-gray">Preparando todo para el gran día...</p>
-          <Button
-            onClick={handleSeed}
-            disabled={seeding}
-            className="mt-4 bg-gradient-to-r from-rose-soft to-champagne text-white hover:from-rose-mid hover:to-champagne-dark transition-all duration-300 rounded-full px-8 shadow-lg"
+          <p className="text-warm-gray">No hay invitados cargados</p>
+          <a
+            href="/admin"
+            className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-rose-soft to-champagne text-white rounded-full text-sm font-medium shadow-lg hover:from-rose-mid hover:to-champagne-dark transition-all"
           >
-            <Database className="h-4 w-4 mr-2" />
-            {seeding ? 'Cargando invitados...' : 'Cargar Lista de Invitados'}
-          </Button>
+            Cargar Base de Datos
+          </a>
         </div>
       </div>
     );
@@ -387,18 +352,6 @@ export default function Home() {
             <p className="text-xs sm:text-sm text-warm-gray tracking-wide">
               Registro de Invitados
             </p>
-
-            <div className="flex items-center justify-center gap-2 pt-1">
-              <Button
-                onClick={handleSeed}
-                disabled={seeding}
-                size="sm"
-                className="bg-gradient-to-r from-champagne-light to-champagne text-charcoal hover:from-champagne hover:to-champagne-dark hover:text-white rounded-full px-4 transition-all duration-300 text-xs font-medium shadow-sm"
-              >
-                <Database className="h-3 w-3 mr-1" />
-                {seeding ? 'Actualizando...' : 'Actualizar'}
-              </Button>
-            </div>
           </div>
         </div>
       </header>
@@ -547,16 +500,6 @@ export default function Home() {
               </button>
             ))}
           </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleReset}
-            className="text-warm-gray hover:text-rose-deep hover:bg-rose-light rounded-full text-[11px] sm:text-xs h-8 px-2.5"
-          >
-            <RotateCcw className="h-3 w-3 mr-1" />
-            Reiniciar
-          </Button>
         </div>
 
         {/* ===== GUEST LIST ===== */}
@@ -567,14 +510,12 @@ export default function Home() {
                 <div className="text-5xl mb-2">💍</div>
                 <p className="text-warm-gray font-medium">No se encontraron invitados</p>
                 <p className="text-xs text-warm-gray/70">Carga la lista de invitados para comenzar</p>
-                <Button
-                  onClick={handleSeed}
-                  disabled={seeding}
-                  className="mt-2 bg-gradient-to-r from-rose-soft to-champagne text-white hover:from-rose-mid hover:to-champagne-dark rounded-full px-6 transition-all duration-300 shadow-md"
+                <a
+                  href="/admin"
+                  className="mt-2 inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-rose-soft to-champagne text-white rounded-full text-sm font-medium shadow-md hover:from-rose-mid hover:to-champagne-dark transition-all"
                 >
-                  <Database className="h-4 w-4 mr-2" />
-                  {seeding ? 'Cargando...' : 'Cargar Lista'}
-                </Button>
+                  Ir a Cargar Base de Datos
+                </a>
               </CardContent>
             </Card>
           )}
