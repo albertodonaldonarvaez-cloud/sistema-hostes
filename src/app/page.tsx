@@ -278,7 +278,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-ivory">
       {/* ===== HEADER ===== */}
-      <header className="wedding-header-bg sticky top-0 z-50 border-b border-rose-light">
+      <header className="wedding-header-bg border-b border-rose-light">
         <div className="max-w-4xl mx-auto px-4 py-5 sm:py-6">
           <div className="text-center space-y-2">
             {/* Decorative top */}
