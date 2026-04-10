@@ -8,11 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import {
   Search,
   Check,
   Users,
@@ -23,11 +18,9 @@ import {
   Sparkles,
   Database,
   PartyPopper,
-  AlertCircle,
   UserCheck,
   Plus,
   Minus,
-  X,
 } from 'lucide-react';
 import {
   Dialog,
@@ -67,19 +60,95 @@ interface Stats {
   }[];
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  'Familia Hdez': 'bg-rose-light text-rose-deep border border-rose-soft/40',
-  'Fam. Estrada': 'bg-champagne-light text-champagne-dark border border-champagne/30',
-  'DIF': 'bg-sage-light text-sage-dark border border-sage/30',
-  'Maestros': 'bg-[#fce8e8] text-[#b85c64] border border-[#e8b4b8]/40',
-  'P': 'bg-[#fff8e8] text-[#b8922f] border border-[#d4a853]/30',
-  'Palomita': 'bg-[#f0e8f8] text-[#7a5d8e] border border-[#c4a8d8]/30',
-  'Policía': 'bg-[#e8f0f8] text-[#4a6d8e] border border-[#8eb4d8]/30',
-  'Familia y Amigos': 'bg-[#f5e6e0] text-[#8e6b62] border border-[#d4a8a0]/30',
+// ===== VIVID, DISTINCTIVE CATEGORY COLORS =====
+// Each category gets a bold, easily-identifiable color
+const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string; dot: string; light: string; badge: string; card: string }> = {
+  'Familia Hdez': {
+    bg: 'bg-rose-500',
+    text: 'text-rose-600',
+    border: 'border-l-rose-500',
+    dot: 'bg-rose-500',
+    light: 'bg-rose-50',
+    badge: 'bg-rose-100 text-rose-700 border-rose-200',
+    card: 'bg-rose-50/60 border-rose-100',
+  },
+  'Fam. Estrada': {
+    bg: 'bg-amber-500',
+    text: 'text-amber-600',
+    border: 'border-l-amber-500',
+    dot: 'bg-amber-500',
+    light: 'bg-amber-50',
+    badge: 'bg-amber-100 text-amber-700 border-amber-200',
+    card: 'bg-amber-50/60 border-amber-100',
+  },
+  'DIF': {
+    bg: 'bg-emerald-500',
+    text: 'text-emerald-600',
+    border: 'border-l-emerald-500',
+    dot: 'bg-emerald-500',
+    light: 'bg-emerald-50',
+    badge: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    card: 'bg-emerald-50/60 border-emerald-100',
+  },
+  'Maestros': {
+    bg: 'bg-violet-500',
+    text: 'text-violet-600',
+    border: 'border-l-violet-500',
+    dot: 'bg-violet-500',
+    light: 'bg-violet-50',
+    badge: 'bg-violet-100 text-violet-700 border-violet-200',
+    card: 'bg-violet-50/60 border-violet-100',
+  },
+  'P': {
+    bg: 'bg-sky-500',
+    text: 'text-sky-600',
+    border: 'border-l-sky-500',
+    dot: 'bg-sky-500',
+    light: 'bg-sky-50',
+    badge: 'bg-sky-100 text-sky-700 border-sky-200',
+    card: 'bg-sky-50/60 border-sky-100',
+  },
+  'Palomita': {
+    bg: 'bg-pink-500',
+    text: 'text-pink-600',
+    border: 'border-l-pink-500',
+    dot: 'bg-pink-500',
+    light: 'bg-pink-50',
+    badge: 'bg-pink-100 text-pink-700 border-pink-200',
+    card: 'bg-pink-50/60 border-pink-100',
+  },
+  'Policía': {
+    bg: 'bg-blue-600',
+    text: 'text-blue-600',
+    border: 'border-l-blue-600',
+    dot: 'bg-blue-600',
+    light: 'bg-blue-50',
+    badge: 'bg-blue-100 text-blue-700 border-blue-200',
+    card: 'bg-blue-50/60 border-blue-100',
+  },
+  'Familia y Amigos': {
+    bg: 'bg-orange-500',
+    text: 'text-orange-600',
+    border: 'border-l-orange-500',
+    dot: 'bg-orange-500',
+    light: 'bg-orange-50',
+    badge: 'bg-orange-100 text-orange-700 border-orange-200',
+    card: 'bg-orange-50/60 border-orange-100',
+  },
 };
 
-function getCategoryColor(cat: string): string {
-  return CATEGORY_COLORS[cat] || 'bg-[#f5e6e0] text-[#8e6b62] border border-[#d4a8a0]/30';
+const DEFAULT_STYLE = {
+  bg: 'bg-gray-500',
+  text: 'text-gray-600',
+  border: 'border-l-gray-500',
+  dot: 'bg-gray-500',
+  light: 'bg-gray-50',
+  badge: 'bg-gray-100 text-gray-700 border-gray-200',
+  card: 'bg-gray-50/60 border-gray-100',
+};
+
+function getCatStyle(cat: string) {
+  return CATEGORY_STYLES[cat] || DEFAULT_STYLE;
 }
 
 export default function Home() {
@@ -159,13 +228,12 @@ export default function Home() {
   };
 
   const openCheckIn = (guest: Guest) => {
-    // Always open dialog — prefill with current arrivedCount if already arrived, or invitados if new
     setCheckInGuest(guest);
     setCheckInCount(guest.arrived ? guest.arrivedCount : guest.invitados);
   };
 
   const confirmCheckIn = async (guest: Guest, count: number) => {
-    // If already arrived, only allow adding more (no lowering or cancelling)
+    // If already arrived, only allow adding more (cannot lower or cancel)
     if (guest.arrived && count <= guest.arrivedCount) {
       setCheckInGuest(null);
       return;
@@ -177,7 +245,6 @@ export default function Home() {
     const newArrivedAt = newArrived ? new Date().toISOString() : null;
     const oldCount = guest.arrived ? guest.arrivedCount : 0;
 
-    // Trigger animation
     if (newArrived && !guest.arrived) {
       setAnimatingId(guest.id);
       setTimeout(() => setAnimatingId(null), 600);
@@ -226,8 +293,6 @@ export default function Home() {
         if (newArrived) {
           const personaText = count === 1 ? 'persona' : 'personas';
           toast.success(`💍 ${guest.nombre} — ${count} ${personaText} registrada${count > 1 ? 's' : ''}`);
-        } else {
-          toast.info(`↩️ ${guest.nombre} — llegada cancelada`);
         }
       }
     } catch {
@@ -262,10 +327,11 @@ export default function Home() {
 
   const sortedCategories = Object.keys(groupedGuests).sort();
 
-  const getCategoryArrived = (cat: string, guestsList: Guest[]): { arrived: number; totalPersonas: number } => {
+  const getCategoryArrived = (cat: string, guestsList: Guest[]): { arrived: number; totalPersonas: number; arrivedPersons: number } => {
     const arrived = guestsList.filter((g) => g.arrived).length;
     const totalPersonas = guestsList.reduce((s, g) => s + g.invitados, 0);
-    return { arrived, totalPersonas };
+    const arrivedPersons = guestsList.reduce((s, g) => s + (g.arrived ? g.arrivedCount : 0), 0);
+    return { arrived, totalPersonas, arrivedPersons };
   };
 
   const formatTime = (dateStr: string | null) => {
@@ -300,111 +366,108 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-ivory">
-      {/* ===== HEADER ===== */}
+      {/* ===== HEADER — Compact on mobile ===== */}
       <header className="wedding-header-bg border-b border-rose-light">
-        <div className="max-w-4xl mx-auto px-4 py-5 sm:py-6">
-          <div className="text-center space-y-2">
-            {/* Decorative top */}
-            <div className="flex items-center justify-center gap-2 text-champagne text-sm">
+        <div className="max-w-2xl mx-auto px-4 py-4 sm:py-6">
+          <div className="text-center space-y-1.5 sm:space-y-2">
+            <div className="flex items-center justify-center gap-1.5 text-champagne text-xs sm:text-sm">
               <span>✦</span>
               <span>✦</span>
               <span>✦</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-elegant text-rose-deep">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-elegant text-rose-deep">
               Nuestra Boda
             </h1>
 
-            {/* Floral divider */}
-            <div className="floral-divider max-w-xs mx-auto">
-              <Heart className="h-4 w-4 text-rose-soft shrink-0" />
+            <div className="floral-divider max-w-[180px] sm:max-w-xs mx-auto">
+              <Heart className="h-3 w-3 text-rose-soft shrink-0" />
             </div>
 
-            <p className="text-sm sm:text-base text-warm-gray tracking-wide">
+            <p className="text-xs sm:text-sm text-warm-gray tracking-wide">
               Registro de Invitados
             </p>
 
-            {/* Action buttons */}
-            <div className="flex items-center justify-center gap-3 pt-2">
+            <div className="flex items-center justify-center gap-2 pt-1">
               <Button
                 onClick={handleSeed}
                 disabled={seeding}
                 size="sm"
-                className="bg-gradient-to-r from-champagne-light to-champagne text-charcoal hover:from-champagne hover:to-champagne-dark hover:text-white rounded-full px-5 transition-all duration-300 text-xs font-medium shadow-sm"
+                className="bg-gradient-to-r from-champagne-light to-champagne text-charcoal hover:from-champagne hover:to-champagne-dark hover:text-white rounded-full px-4 transition-all duration-300 text-xs font-medium shadow-sm"
               >
-                <Database className="h-3.5 w-3.5 mr-1.5" />
-                {seeding ? 'Actualizando...' : 'Actualizar Datos'}
+                <Database className="h-3 w-3 mr-1" />
+                {seeding ? 'Actualizando...' : 'Actualizar'}
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 space-y-6">
-        {/* ===== STATS DASHBOARD ===== */}
+      <main className="flex-1 max-w-2xl mx-auto w-full px-3 sm:px-4 py-4 space-y-4">
+        {/* ===== STATS DASHBOARD — 2x2 compact ===== */}
         {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 fade-in-up stagger-children">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 fade-in-up stagger-children">
             {/* Total Personas */}
-            <Card className="wedding-card rounded-2xl border border-rose-soft/30 bg-white shadow-sm overflow-hidden">
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-rose-light">
-                    <Users className="h-4 w-4 text-rose-deep" />
+            <Card className="rounded-xl sm:rounded-2xl border border-rose-soft/20 bg-white shadow-sm overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <div className="p-1 rounded-lg bg-rose-light">
+                    <Users className="h-3.5 w-3.5 text-rose-deep" />
                   </div>
-                  <span className="text-xs font-medium text-warm-gray">Total Invitados</span>
+                  <span className="text-[10px] sm:text-xs font-medium text-warm-gray">Total</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-charcoal">
+                <p className="text-xl sm:text-2xl font-bold text-charcoal">
                   {stats.totalPersonas}
                 </p>
-                <p className="text-xs text-warm-gray mt-1">{stats.totalInvitados} grupos</p>
+                <p className="text-[10px] sm:text-xs text-warm-gray mt-0.5">{stats.totalInvitados} grupos</p>
               </CardContent>
             </Card>
 
             {/* Llegaron */}
-            <Card className="wedding-card rounded-2xl border border-sage/30 bg-white shadow-sm overflow-hidden">
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-sage-light">
-                    <UserCheck className="h-4 w-4 text-sage-dark" />
+            <Card className="rounded-xl sm:rounded-2xl border border-emerald-200 bg-white shadow-sm overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <div className="p-1 rounded-lg bg-emerald-50">
+                    <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
                   </div>
-                  <span className="text-xs font-medium text-warm-gray">Han Llegado</span>
+                  <span className="text-[10px] sm:text-xs font-medium text-warm-gray">Llegaron</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-sage-dark">
+                <p className="text-xl sm:text-2xl font-bold text-emerald-600">
                   {stats.totalArrived}
                 </p>
-                <p className="text-xs text-warm-gray mt-1">personas presentes</p>
+                <p className="text-[10px] sm:text-xs text-warm-gray mt-0.5">personas</p>
               </CardContent>
             </Card>
 
             {/* Pendientes */}
-            <Card className="wedding-card rounded-2xl border border-champagne/30 bg-white shadow-sm overflow-hidden">
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-champagne-light">
-                    <Clock className="h-4 w-4 text-champagne-dark" />
+            <Card className="rounded-xl sm:rounded-2xl border border-amber-200 bg-white shadow-sm overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <div className="p-1 rounded-lg bg-amber-50">
+                    <Clock className="h-3.5 w-3.5 text-amber-600" />
                   </div>
-                  <span className="text-xs font-medium text-warm-gray">Pendientes</span>
+                  <span className="text-[10px] sm:text-xs font-medium text-warm-gray">Pendientes</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-champagne-dark">
+                <p className="text-xl sm:text-2xl font-bold text-amber-600">
                   {stats.totalPending}
                 </p>
-                <p className="text-xs text-warm-gray mt-1">por llegar</p>
+                <p className="text-[10px] sm:text-xs text-warm-gray mt-0.5">por llegar</p>
               </CardContent>
             </Card>
 
             {/* Progreso */}
-            <Card className="wedding-card rounded-2xl border border-rose-soft/30 bg-white shadow-sm overflow-hidden">
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1.5 rounded-lg bg-rose-light">
-                    <Sparkles className="h-4 w-4 text-rose-deep" />
+            <Card className="rounded-xl sm:rounded-2xl border border-rose-soft/20 bg-white shadow-sm overflow-hidden">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <div className="p-1 rounded-lg bg-rose-light">
+                    <Sparkles className="h-3.5 w-3.5 text-rose-deep" />
                   </div>
-                  <span className="text-xs font-medium text-warm-gray">Progreso</span>
+                  <span className="text-[10px] sm:text-xs font-medium text-warm-gray">Progreso</span>
                 </div>
-                <p className="text-2xl sm:text-3xl font-bold text-rose-deep">
+                <p className="text-xl sm:text-2xl font-bold text-rose-deep">
                   {stats.percentage}%
                 </p>
-                <div className="mt-2 wedding-progress h-2.5">
+                <div className="mt-1.5 wedding-progress h-2 sm:h-2.5">
                   <div
                     className="wedding-progress-bar h-full"
                     style={{ width: `${stats.percentage}%` }}
@@ -415,90 +478,91 @@ export default function Home() {
           </div>
         )}
 
-        {/* ===== SEARCH & FILTERS ===== */}
-        <Card className="rounded-2xl border border-rose-soft/20 bg-white/80 backdrop-blur-sm shadow-sm fade-in-up">
-          <CardContent className="p-4 sm:p-5 space-y-4">
-            {/* Search bar */}
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray" />
-              <Input
-                placeholder="Buscar por nombre..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 h-12 rounded-xl border-rose-light/60 bg-ivory/50 focus:border-champagne focus:ring-champagne/20 text-charcoal placeholder:text-warm-gray/70"
-              />
-            </div>
+        {/* ===== SEARCH BAR — Sticky on mobile ===== */}
+        <div className="sticky top-0 z-30 -mx-3 px-3 pt-2 pb-1 sm:static sm:-mx-4 sm:px-4 sm:pt-0 sm:pb-0 bg-ivory/95 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-none">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-warm-gray" />
+            <Input
+              placeholder="Buscar invitado..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-11 sm:h-12 rounded-xl border-rose-light/60 bg-white shadow-sm focus:border-champagne focus:ring-champagne/20 text-charcoal placeholder:text-warm-gray/60 text-base"
+            />
+          </div>
+        </div>
 
-            {/* Category pills */}
-            <div className="space-y-3">
-              <p className="text-xs font-medium text-warm-gray uppercase tracking-wider">Categoría</p>
-              <div className="flex flex-wrap gap-2">
+        {/* ===== CATEGORY FILTERS — Horizontal scroll on mobile ===== */}
+        <div className="fade-in-up">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 category-scroll sm:flex-wrap sm:overflow-x-visible sm:mx-0 sm:px-0">
+            <button
+              onClick={() => setCategoriaFilter('all')}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold border-2 transition-all ${
+                categoriaFilter === 'all'
+                  ? 'border-charcoal bg-charcoal text-white shadow-md'
+                  : 'border-gray-200 text-warm-gray hover:border-gray-300 bg-white'
+              }`}
+            >
+              <Users className="h-3 w-3" />
+              Todas
+            </button>
+            {categories.map((cat) => {
+              const style = getCatStyle(cat);
+              const isActive = categoriaFilter === cat;
+              return (
                 <button
-                  onClick={() => setCategoriaFilter('all')}
-                  className={`pill-btn px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                    categoriaFilter === 'all'
-                      ? 'pill-btn-active border-transparent'
-                      : 'border-rose-soft/40 text-warm-gray hover:border-rose-soft hover:text-rose-deep bg-white'
+                  key={cat}
+                  onClick={() => setCategoriaFilter(isActive ? 'all' : cat)}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold border-2 transition-all ${
+                    isActive
+                      ? `${style.bg} text-white border-transparent shadow-md`
+                      : `border-gray-200 text-warm-gray hover:border-gray-300 bg-white`
                   }`}
                 >
-                  Todas
+                  <span className={`h-2 w-2 rounded-full ${isActive ? 'bg-white/50' : style.dot}`} />
+                  {cat}
                 </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setCategoriaFilter(categoriaFilter === cat ? 'all' : cat)}
-                    className={`pill-btn px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                      categoriaFilter === cat
-                        ? 'pill-btn-active border-transparent'
-                        : 'border-rose-soft/40 text-warm-gray hover:border-rose-soft hover:text-rose-deep bg-white'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
+              );
+            })}
+          </div>
+        </div>
 
-            {/* Status pills + Reset */}
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex gap-2">
-                {[
-                  { key: 'all', label: 'Todos', icon: Users },
-                  { key: 'arrived', label: 'Llegaron', icon: Check },
-                  { key: 'pending', label: 'Pendientes', icon: Clock },
-                ].map(({ key, label, icon: Icon }) => (
-                  <button
-                    key={key}
-                    onClick={() => setStatusFilter(key)}
-                    className={`pill-btn flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                      statusFilter === key
-                        ? 'pill-btn-active border-transparent'
-                        : 'border-rose-soft/40 text-warm-gray hover:border-rose-soft hover:text-rose-deep bg-white'
-                    }`}
-                  >
-                    <Icon className="h-3 w-3" />
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleReset}
-                className="text-warm-gray hover:text-rose-deep hover:bg-rose-light rounded-full text-xs"
+        {/* ===== STATUS FILTER + RESET ===== */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-1.5">
+            {[
+              { key: 'all', label: 'Todos', icon: Users },
+              { key: 'arrived', label: '✓ Llegaron', icon: Check },
+              { key: 'pending', label: '○ Pendientes', icon: Clock },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setStatusFilter(key)}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-medium border transition-all ${
+                  statusFilter === key
+                    ? 'border-charcoal bg-charcoal text-white'
+                    : 'border-gray-200 text-warm-gray hover:border-gray-300 bg-white'
+                }`}
               >
-                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                Reiniciar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleReset}
+            className="text-warm-gray hover:text-rose-deep hover:bg-rose-light rounded-full text-[11px] sm:text-xs h-8 px-2.5"
+          >
+            <RotateCcw className="h-3 w-3 mr-1" />
+            Reiniciar
+          </Button>
+        </div>
 
         {/* ===== GUEST LIST ===== */}
-        <div className="space-y-4 fade-in-up">
+        <div className="space-y-3 fade-in-up">
           {sortedCategories.length === 0 && !loading && (
-            <Card className="rounded-2xl border border-rose-soft/20 bg-white/80 shadow-sm">
+            <Card className="rounded-xl border border-rose-soft/20 bg-white/80 shadow-sm">
               <CardContent className="p-8 text-center space-y-4">
                 <div className="text-5xl mb-2">💍</div>
                 <p className="text-warm-gray font-medium">No se encontraron invitados</p>
@@ -517,43 +581,58 @@ export default function Home() {
 
           {sortedCategories.map((cat) => {
             const catGuests = groupedGuests[cat];
-            const { arrived: catArrivedCount, totalPersonas: catTotalPersonas } = getCategoryArrived(cat, catGuests);
+            const { arrived: catArrivedCount, totalPersonas: catTotalPersonas, arrivedPersons } = getCategoryArrived(cat, catGuests);
             const isOpen = openCategories[cat] !== false;
+            const style = getCatStyle(cat);
 
             return (
-              <Collapsible
+              <div
                 key={cat}
-                open={isOpen}
-                onOpenChange={() => toggleCategory(cat)}
+                className={`rounded-xl sm:rounded-2xl border overflow-hidden shadow-sm transition-all ${style.card}`}
               >
-                <Card className="wedding-card rounded-2xl border border-rose-soft/20 bg-white/90 shadow-sm overflow-hidden">
-                  <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center justify-between p-4 sm:p-5 hover:bg-rose-light/30 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <Badge
-                          variant="outline"
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${getCategoryColor(cat)}`}
-                        >
-                          {cat}
-                        </Badge>
-                        <span className="text-sm text-warm-gray hidden sm:inline">
-                          {catArrivedCount}/{catGuests.length} llegados · {catTotalPersonas} personas
+                {/* Category header — always visible as toggle */}
+                <button
+                  onClick={() => toggleCategory(cat)}
+                  className="w-full"
+                >
+                  <div className="flex items-center justify-between px-3.5 sm:px-4 py-3 sm:py-3.5">
+                    <div className="flex items-center gap-2.5">
+                      {/* Color dot */}
+                      <span className={`h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full ${style.dot} ring-2 ring-offset-1 ${style.light}`} />
+
+                      <span className={`font-bold text-sm sm:text-base ${style.text}`}>
+                        {cat}
+                      </span>
+
+                      {/* Mini stats */}
+                      <div className="hidden sm:flex items-center gap-2 text-xs text-warm-gray">
+                        <span className="px-2 py-0.5 rounded-full bg-white/70 border border-gray-100 font-medium">
+                          {arrivedPersons}/{catTotalPersonas} personas
                         </span>
-                        <span className="text-sm text-warm-gray sm:hidden">
-                          {catArrivedCount}/{catGuests.length}
+                        <span className="text-warm-gray/60">
+                          {catArrivedCount}/{catGuests.length} grupos
                         </span>
                       </div>
-                      <ChevronDown
-                        className={`h-5 w-5 text-warm-gray transition-transform duration-300 ${
-                          isOpen ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </div>
-                  </CollapsibleTrigger>
 
-                  <CollapsibleContent>
-                    <Separator className="bg-rose-light/50" />
-                    <div className="p-3 sm:p-4 space-y-2 max-h-[70vh] overflow-y-auto wedding-scrollbar">
+                      {/* Mobile mini stats */}
+                      <span className="sm:hidden text-[11px] font-medium text-warm-gray bg-white/60 px-2 py-0.5 rounded-full">
+                        {arrivedPersons}/{catTotalPersonas}
+                      </span>
+                    </div>
+
+                    <ChevronDown
+                      className={`h-4 w-4 text-warm-gray/70 transition-transform duration-200 ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </div>
+                </button>
+
+                {/* Guest rows */}
+                {isOpen && (
+                  <>
+                    <div className="h-px bg-gray-200/50 mx-3.5 sm:mx-4" />
+                    <div className="p-2 sm:p-2.5 space-y-1.5">
                       {catGuests.map((guest) => {
                         const totalPersonas = guest.invitados;
                         const isAnimating = animatingId === guest.id;
@@ -561,228 +640,249 @@ export default function Home() {
                         return (
                           <div
                             key={guest.id}
-                            className={`flex items-center gap-3 p-3 sm:p-4 rounded-xl border transition-all duration-300 ${
+                            onClick={() => openCheckIn(guest)}
+                            className={`active:scale-[0.98] transition-all duration-200 cursor-pointer rounded-lg border-l-4 ${
+                              style.border
+                            } ${
                               guest.arrived
-                                ? 'bg-sage-light/50 border-sage/30 shadow-sm'
-                                : 'bg-white border-rose-soft/20 hover:border-champagne/40 hover:shadow-sm'
+                                ? 'bg-emerald-50/50 border border-gray-100 border-l-4 shadow-sm'
+                                : 'bg-white border border-gray-100 hover:shadow-sm'
                             } ${isAnimating ? 'scale-[1.02]' : ''}`}
                           >
-                            {/* Check-in Button */}
-                            <button
-                              onClick={() => openCheckIn(guest)}
-                              className={`shrink-0 h-12 w-12 sm:h-14 sm:w-14 rounded-full flex items-center justify-center transition-all duration-300 ${
+                            <div className="flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3">
+                              {/* Check-in indicator */}
+                              <div className={`shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center transition-all ${
                                 guest.arrived
-                                  ? 'bg-sage hover:bg-sage-dark text-white checkin-glow shadow-lg shadow-sage/30'
-                                  : 'bg-white border-2 border-rose-soft text-rose-deep hover:border-rose-mid hover:bg-rose-light/50 shadow-sm'
-                              } ${isAnimating ? 'checkin-pulse' : ''}`}
-                              aria-label={
-                                guest.arrived
-                                  ? `Cancelar llegada de ${guest.nombre}`
-                                  : `Registrar llegada de ${guest.nombre}`
-                              }
-                            >
-                              {guest.arrived ? (
-                                <Check className="h-5 w-5 sm:h-6 sm:w-6" />
-                              ) : (
-                                <Heart className="h-5 w-5 sm:h-6 sm:w-6" />
-                              )}
-                            </button>
-
-                            {/* Guest Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span
-                                  className={`font-semibold text-base sm:text-lg transition-colors ${
-                                    guest.arrived
-                                      ? 'text-sage-dark'
-                                      : 'text-charcoal'
-                                  }`}
-                                >
-                                  {guest.nombre}
-                                </span>
-                                <Badge
-                                  className={`rounded-full text-xs font-medium px-2.5 py-0.5 ${
-                                    guest.arrived
-                                      ? 'bg-sage/80 text-white border-0'
-                                      : 'bg-rose-light text-rose-deep border border-rose-soft/50'
-                                  }`}
-                                >
-                                  {guest.arrived
-                                    ? `${guest.arrivedCount}/${totalPersonas} persona${totalPersonas !== 1 ? 's' : ''}`
-                                    : `${totalPersonas} persona${totalPersonas !== 1 ? 's' : ''}`}
-                                </Badge>
+                                  ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                                  : 'bg-gray-100 text-gray-400'
+                              } ${isAnimating ? 'checkin-pulse' : ''}`}>
+                                {guest.arrived ? (
+                                  <Check className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={3} />
+                                ) : (
+                                  <UserCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                                )}
                               </div>
-                              {guest.arrived && guest.arrivedAt && (
-                                <p className="text-xs text-sage-dark/70 mt-1 flex items-center gap-1">
-                                  <Clock className="h-3 w-3" />
-                                  Llegaron {guest.arrivedCount} persona{guest.arrivedCount !== 1 ? 's' : ''} a las {formatTime(guest.arrivedAt)}
-                                </p>
+
+                              {/* Guest info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-semibold text-sm sm:text-base truncate ${
+                                    guest.arrived ? 'text-emerald-700' : 'text-charcoal'
+                                  }`}>
+                                    {guest.nombre}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  {guest.arrived ? (
+                                    <span className="text-[11px] sm:text-xs text-emerald-600 font-medium">
+                                      ✓ {guest.arrivedCount}/{totalPersonas} personas
+                                    </span>
+                                  ) : (
+                                    <span className="text-[11px] sm:text-xs text-warm-gray">
+                                      {totalPersonas} persona{totalPersonas !== 1 ? 's' : ''}
+                                    </span>
+                                  )}
+                                  {guest.arrived && guest.arrivedAt && (
+                                    <span className="text-[10px] text-warm-gray/60">
+                                      · {formatTime(guest.arrivedAt)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Tap hint for mobile */}
+                              {!guest.arrived && (
+                                <div className="shrink-0 hidden sm:flex items-center">
+                                  <span className="text-[10px] text-warm-gray/50 font-medium">Toca para registrar</span>
+                                </div>
                               )}
                             </div>
                           </div>
                         );
                       })}
                     </div>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
+                  </>
+                )}
+              </div>
             );
           })}
         </div>
 
-        {/* Spacer for footer */}
+        {/* Spacer */}
         <div className="h-4" />
       </main>
 
-      {/* ===== CHECK-IN DIALOG ===== */}
+      {/* ===== CHECK-IN DIALOG — Mobile-optimized ===== */}
       <Dialog open={checkInGuest !== null} onOpenChange={(open) => { if (!open) setCheckInGuest(null); }}>
-        <DialogContent className="sm:max-w-md rounded-2xl border-rose-soft/30 bg-white p-0 overflow-hidden">
-          <div className="bg-gradient-to-r from-rose-light/40 to-champagne-light/40 px-6 py-4">
-            <DialogHeader className="text-left">
-              <DialogTitle className="text-lg font-semibold text-charcoal flex items-center gap-2">
-                <Heart className="h-5 w-5 text-rose-deep" />
-                {checkInGuest?.arrived ? 'Agregar Personas' : 'Registrar Llegada'}
-              </DialogTitle>
-              <DialogDescription className="text-warm-gray text-sm mt-1">
-                {checkInGuest?.arrived
-                  ? <><span className="font-semibold text-charcoal">{checkInGuest.nombre}</span> ya llegó con {checkInGuest.arrivedCount} persona{checkInGuest.arrivedCount !== 1 ? 's' : ''}. ¿Llegaron más?</>
-                  : <>¿Cuántas personas llegaron con <span className="font-semibold text-charcoal">{checkInGuest?.nombre}</span>?</>}
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-          <div className="px-6 py-5 space-y-5">
-            {/* Counter */}
-            <div className="flex items-center justify-center gap-6">
-              <button
-                onClick={() => setCheckInCount((c) => Math.max(checkInGuest?.arrived ? checkInGuest.arrivedCount : 0, c - 1))}
-                disabled={checkInGuest?.arrived ? checkInCount <= checkInGuest.arrivedCount : checkInCount <= 0}
-                className={`h-12 w-12 rounded-full border-2 border-rose-soft bg-white text-rose-deep flex items-center justify-center transition-all active:scale-95 ${checkInGuest?.arrived ? (checkInCount <= checkInGuest.arrivedCount ? 'opacity-30 cursor-not-allowed' : 'hover:bg-rose-light/50 hover:border-rose-mid') : 'hover:bg-rose-light/50 hover:border-rose-mid'}`}
-              >
-                <Minus className="h-5 w-5" />
-              </button>
-              <div className="text-center min-w-[80px]">
-                <Input
-                  type="number"
-                  min={checkInGuest?.arrived ? checkInGuest.arrivedCount : 0}
-                  value={checkInCount}
-                  onChange={(e) => {
-                    const min = checkInGuest?.arrived ? checkInGuest.arrivedCount : 0;
-                    setCheckInCount(Math.max(min, parseInt(e.target.value) || 0));
-                  }}
-                  className="h-16 w-20 text-center text-3xl font-bold text-charcoal rounded-xl border-rose-light/60 focus:border-champagne focus:ring-champagne/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
+        <DialogContent className="sm:max-w-md rounded-2xl border-gray-200 bg-white p-0 overflow-hidden mx-4 [max-width:calc(100%-2rem)]">
+          {checkInGuest && (
+            <>
+              {/* Dialog header with category color */}
+              <div className={`px-5 py-4 ${getCatStyle(checkInGuest.categoria).light}`}>
+                <DialogHeader className="text-left">
+                  <DialogTitle className="text-base sm:text-lg font-semibold text-charcoal flex items-center gap-2">
+                    {checkInGuest.arrived ? (
+                      <span className="flex items-center justify-center h-7 w-7 rounded-full bg-emerald-500 text-white">
+                        <Check className="h-4 w-4" strokeWidth={3} />
+                      </span>
+                    ) : (
+                      <Heart className="h-5 w-5 text-rose-deep" />
+                    )}
+                    {checkInGuest.arrived ? 'Agregar Personas' : 'Registrar Llegada'}
+                  </DialogTitle>
+                  <DialogDescription className="text-warm-gray text-sm mt-1.5">
+                    {checkInGuest.arrived
+                      ? <><span className="font-semibold text-charcoal">{checkInGuest.nombre}</span> ya llegó con {checkInGuest.arrivedCount} persona{checkInGuest.arrivedCount !== 1 ? 's' : ''}. ¿Llegaron más?</>
+                      : <>¿Cuántas personas llegaron con <span className="font-semibold text-charcoal">{checkInGuest.nombre}</span>?</>}
+                  </DialogDescription>
+                  {/* Category badge */}
+                  <div className="mt-2">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${getCatStyle(checkInGuest.categoria).badge}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${getCatStyle(checkInGuest.categoria).dot}`} />
+                      {checkInGuest.categoria}
+                    </span>
+                  </div>
+                </DialogHeader>
               </div>
-              <button
-                onClick={() => setCheckInCount((c) => c + 1)}
-                className="h-12 w-12 rounded-full border-2 border-sage bg-sage-light text-sage-dark hover:bg-sage hover:text-white flex items-center justify-center transition-all active:scale-95"
-              >
-                <Plus className="h-5 w-5" />
-              </button>
-            </div>
 
-            {/* Info text */}
-            <div className="text-center space-y-1">
-              <p className="text-sm text-warm-gray">
-                {checkInGuest?.arrived
-                  ? <>Ya registradas: <span className="font-semibold text-sage-dark">{checkInGuest.arrivedCount} persona{checkInGuest.arrivedCount !== 1 ? 's' : ''}</span></>
-                  : <>Esperadas: <span className="font-semibold text-charcoal">{checkInGuest?.invitados} persona{checkInGuest && checkInGuest.invitados !== 1 ? 's' : ''}</span></>}
-              </p>
-              {checkInCount > (checkInGuest?.arrived ? checkInGuest.arrivedCount : 0) && (
-                <p className="text-xs font-medium text-champagne-dark">
-                  +{checkInCount - (checkInGuest?.arrived ? checkInGuest.arrivedCount : 0)} persona{checkInCount - (checkInGuest?.arrived ? checkInGuest.arrivedCount : 0) !== 1 ? 's' : ''} más
-                </p>
-              )}
-            </div>
-
-            {/* Quick buttons */}
-            <div className="flex flex-wrap justify-center gap-2">
-              {!checkInGuest?.arrived && (
-                <>
+              <div className="px-5 py-5 space-y-5">
+                {/* Counter */}
+                <div className="flex items-center justify-center gap-5 sm:gap-6">
                   <button
-                    onClick={() => setCheckInCount(checkInGuest?.invitados || 0)}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-champagne-light text-champagne-dark hover:bg-champagne hover:text-white transition-all"
+                    onClick={() => setCheckInCount((c) => Math.max(checkInGuest.arrived ? checkInGuest.arrivedCount : 0, c - 1))}
+                    disabled={checkInGuest.arrived ? checkInCount <= checkInGuest.arrivedCount : checkInCount <= 0}
+                    className={`h-14 w-14 rounded-2xl border-2 border-gray-200 bg-white text-charcoal flex items-center justify-center transition-all active:scale-90 ${
+                      checkInGuest.arrived
+                        ? (checkInCount <= checkInGuest.arrivedCount ? 'opacity-20 cursor-not-allowed' : 'hover:bg-gray-50 active:bg-gray-100 border-gray-300')
+                        : checkInCount <= 0
+                          ? 'opacity-20 cursor-not-allowed'
+                          : 'hover:bg-gray-50 active:bg-gray-100 border-gray-300'
+                    }`}
                   >
-                    Todas ({checkInGuest?.invitados || 0})
+                    <Minus className="h-6 w-6" strokeWidth={2.5} />
                   </button>
-                  {checkInGuest && checkInGuest.invitados > 1 && (
+                  <div className="text-center min-w-[80px]">
+                    <Input
+                      type="number"
+                      min={checkInGuest.arrived ? checkInGuest.arrivedCount : 0}
+                      value={checkInCount}
+                      onChange={(e) => {
+                        const min = checkInGuest.arrived ? checkInGuest.arrivedCount : 0;
+                        setCheckInCount(Math.max(min, parseInt(e.target.value) || 0));
+                      }}
+                      className="h-16 w-20 text-center text-4xl font-bold text-charcoal rounded-2xl border-gray-200 focus:border-champagne focus:ring-champagne/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-gray-50"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setCheckInCount((c) => c + 1)}
+                    className="h-14 w-14 rounded-2xl border-2 border-emerald-300 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white hover:border-emerald-500 flex items-center justify-center transition-all active:scale-90 shadow-sm"
+                  >
+                    <Plus className="h-6 w-6" strokeWidth={2.5} />
+                  </button>
+                </div>
+
+                {/* Info text */}
+                <div className="text-center space-y-1">
+                  <p className="text-sm text-warm-gray">
+                    {checkInGuest.arrived
+                      ? <>Ya registradas: <span className="font-bold text-emerald-600">{checkInGuest.arrivedCount} persona{checkInGuest.arrivedCount !== 1 ? 's' : ''}</span></>
+                      : <>Esperadas: <span className="font-bold text-charcoal">{checkInGuest.invitados} persona{checkInGuest.invitados !== 1 ? 's' : ''}</span></>}
+                  </p>
+                  {checkInCount > (checkInGuest.arrived ? checkInGuest.arrivedCount : 0) && (
+                    <p className="text-sm font-bold text-emerald-600">
+                      +{checkInCount - (checkInGuest.arrived ? checkInGuest.arrivedCount : 0)} persona{checkInCount - (checkInGuest.arrived ? checkInGuest.arrivedCount : 0) !== 1 ? 's' : ''} más
+                    </p>
+                  )}
+                </div>
+
+                {/* Quick buttons */}
+                <div className="flex flex-wrap justify-center gap-2">
+                  {!checkInGuest.arrived && (
+                    <>
+                      <button
+                        onClick={() => setCheckInCount(checkInGuest.invitados || 0)}
+                        className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 active:bg-amber-200 transition-all border border-amber-200"
+                      >
+                        Todas ({checkInGuest.invitados || 0})
+                      </button>
+                      {checkInGuest.invitados > 1 && (
+                        <button
+                          onClick={() => setCheckInCount(1)}
+                          className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 active:bg-rose-200 transition-all border border-rose-200"
+                        >
+                          Solo 1
+                        </button>
+                      )}
+                    </>
+                  )}
+                  {checkInGuest.arrived && (
                     <button
-                      onClick={() => setCheckInCount(1)}
-                      className="px-3 py-1.5 rounded-full text-xs font-medium bg-rose-light text-rose-deep hover:bg-rose-soft hover:text-white transition-all"
+                      onClick={() => setCheckInCount(checkInGuest.arrivedCount + 1)}
+                      className="px-4 py-2.5 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:bg-emerald-200 transition-all border border-emerald-200"
                     >
-                      Solo 1
+                      +1 persona más
                     </button>
                   )}
-                </>
-              )}
-              {checkInGuest?.arrived && (
-                <button
-                  onClick={() => setCheckInCount(checkInGuest.arrivedCount + 1)}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-sage-light text-sage-dark hover:bg-sage hover:text-white transition-all"
+                </div>
+              </div>
+
+              <DialogFooter className="px-5 pb-5 pt-0 flex gap-2.5">
+                <Button
+                  variant="outline"
+                  onClick={() => setCheckInGuest(null)}
+                  className="flex-1 rounded-xl border-gray-200 text-warm-gray hover:text-charcoal hover:bg-gray-50 h-12 text-sm font-medium"
                 >
-                  +1 persona más
-                </button>
-              )}
-            </div>
-          </div>
-          <DialogFooter className="px-6 pb-5 pt-0 flex gap-3 sm:gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setCheckInGuest(null)}
-              className="flex-1 rounded-full border-rose-soft/40 text-warm-gray hover:text-charcoal hover:bg-rose-light/30 h-11"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => checkInGuest && confirmCheckIn(checkInGuest, checkInCount)}
-              className={`flex-1 rounded-full h-11 font-medium shadow-md transition-all ${
-                checkInGuest?.arrived && checkInCount <= checkInGuest.arrivedCount
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-sage to-sage-dark text-white hover:opacity-90'
-              }`}
-            >
-              <Check className="h-4 w-4 mr-1.5" />
-              {checkInGuest?.arrived
-                ? checkInCount > checkInGuest.arrivedCount
-                  ? `Agregar ${checkInCount - checkInGuest.arrivedCount} persona${checkInCount - checkInGuest.arrivedCount !== 1 ? 's' : ''}`
-                  : 'Sin cambios'
-                : `Registrar ${checkInCount} persona${checkInCount !== 1 ? 's' : ''}`}
-            </Button>
-          </DialogFooter>
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={() => confirmCheckIn(checkInGuest, checkInCount)}
+                  disabled={checkInGuest.arrived && checkInCount <= checkInGuest.arrivedCount}
+                  className={`flex-1 rounded-xl h-12 text-sm font-semibold shadow-md transition-all active:scale-[0.97] ${
+                    checkInGuest.arrived && checkInCount <= checkInGuest.arrivedCount
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
+                      : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                  }`}
+                >
+                  <Check className="h-4 w-4 mr-1.5" />
+                  {checkInGuest.arrived
+                    ? checkInCount > checkInGuest.arrivedCount
+                      ? `+${checkInCount - checkInGuest.arrivedCount} persona${checkInCount - checkInGuest.arrivedCount !== 1 ? 's' : ''}`
+                      : 'Sin cambios'
+                    : `Registrar ${checkInCount} persona${checkInCount !== 1 ? 's' : ''}`}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
       {/* ===== FOOTER ===== */}
-      <footer className="border-t border-rose-light/60 bg-white/60 backdrop-blur-sm mt-auto">
-        <div className="max-w-4xl mx-auto px-4 py-6">
+      <footer className="border-t border-rose-light/40 bg-white/60 backdrop-blur-sm mt-auto">
+        <div className="max-w-2xl mx-auto px-4 py-4 sm:py-5">
           {stats && (
-            <div className="text-center space-y-3 mb-4">
-              <div className="flex items-center justify-center gap-2 text-champagne text-sm">
-                <span>✦</span>
-                <span>✦</span>
-                <span>✦</span>
-              </div>
+            <div className="text-center space-y-2 mb-3">
               <p className="text-sm font-medium text-warm-gray">
-                {stats.totalArrived} de {stats.totalPersonas} personas han llegado
+                {stats.totalArrived} de {stats.totalPersonas} personas
               </p>
-              <div className="wedding-progress h-3 max-w-sm mx-auto">
+              <div className="wedding-progress h-2.5 max-w-xs mx-auto">
                 <div
                   className="wedding-progress-bar h-full"
                   style={{ width: `${stats.percentage}%` }}
                 />
               </div>
               {stats.percentage === 100 && (
-                <div className="flex items-center justify-center gap-2 text-sage-dark">
-                  <PartyPopper className="h-5 w-5" />
-                  <span className="text-sm font-semibold">¡Todos han llegado!</span>
-                  <PartyPopper className="h-5 w-5" />
+                <div className="flex items-center justify-center gap-2 text-emerald-600">
+                  <PartyPopper className="h-4 w-4" />
+                  <span className="text-sm font-bold">¡Todos han llegado!</span>
+                  <PartyPopper className="h-4 w-4" />
                 </div>
               )}
             </div>
           )}
-          <div className="floral-divider max-w-xs mx-auto mb-3">
-            <Heart className="h-3.5 w-3.5 text-rose-soft shrink-0" />
+          <div className="floral-divider max-w-[180px] mx-auto mb-2">
+            <Heart className="h-3 w-3 text-rose-soft shrink-0" />
           </div>
-          <p className="text-center text-xs text-warm-gray/70 font-elegant">
+          <p className="text-center text-[10px] sm:text-xs text-warm-gray/60 font-elegant">
             Con amor, en nuestro día más especial 💕
           </p>
         </div>
