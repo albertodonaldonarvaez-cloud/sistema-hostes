@@ -26,6 +26,7 @@ function cleanCategoria(raw: string | undefined | null): string {
 export async function POST(req: NextRequest) {
   try {
     await ensureSchema();
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 
@@ -36,7 +37,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Validate file type
     if (
       !file.name.endsWith(".xlsx") &&
       !file.name.endsWith(".xls") &&
@@ -51,16 +51,13 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Save file to upload directory
     const uploadDir = join(process.cwd(), "upload");
     await mkdir(uploadDir, { recursive: true });
     const filePath = join(uploadDir, "invitados.xlsx");
     await writeFile(filePath, buffer);
 
-    // Parse the workbook
     const workbook = XLSX.read(buffer, { type: "buffer" });
 
-    // Try sheet "invitados" first, otherwise use first sheet
     let sheet = workbook.Sheets["invitados"];
     if (!sheet) {
       const firstSheet = workbook.SheetNames[0];
@@ -73,11 +70,9 @@ export async function POST(req: NextRequest) {
       sheet = workbook.Sheets[firstSheet];
     }
 
-    // Convert to JSON rows
     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as unknown[][];
     const dataRows = rows.slice(1);
 
-    // Clear existing data
     await db.guest.deleteMany({});
 
     let created = 0;
