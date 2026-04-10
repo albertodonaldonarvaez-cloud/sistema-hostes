@@ -159,13 +159,9 @@ export default function Home() {
   };
 
   const openCheckIn = (guest: Guest) => {
-    if (guest.arrived) {
-      // If already arrived, just cancel (no dialog)
-      confirmCheckIn(guest, 0);
-      return;
-    }
+    // Always open dialog — prefill with current arrivedCount if already arrived, or invitados if new
     setCheckInGuest(guest);
-    setCheckInCount(guest.invitados);
+    setCheckInCount(guest.arrived ? guest.arrivedCount : guest.invitados);
   };
 
   const confirmCheckIn = async (guest: Guest, count: number) => {
@@ -639,10 +635,10 @@ export default function Home() {
             <DialogHeader className="text-left">
               <DialogTitle className="text-lg font-semibold text-charcoal flex items-center gap-2">
                 <Heart className="h-5 w-5 text-rose-deep" />
-                Registrar Llegada
+                {checkInGuest?.arrived ? 'Modificar Llegada' : 'Registrar Llegada'}
               </DialogTitle>
               <DialogDescription className="text-warm-gray text-sm mt-1">
-                ¿Cuántas personas llegaron con <span className="font-semibold text-charcoal">{checkInGuest?.nombre}</span>?
+                ¿Cuántas personas {checkInGuest?.arrived ? 'han llegado en total' : 'llegaron'} con <span className="font-semibold text-charcoal">{checkInGuest?.nombre}</span>?
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -677,11 +673,16 @@ export default function Home() {
               <p className="text-sm text-warm-gray">
                 Esperadas: <span className="font-semibold text-charcoal">{checkInGuest?.invitados} persona{checkInGuest && checkInGuest.invitados !== 1 ? 's' : ''}</span>
               </p>
-              {checkInCount !== checkInGuest?.invitados && (
+              {checkInCount !== checkInGuest?.invitados && checkInCount > 0 && (
                 <p className={`text-xs font-medium ${checkInCount > (checkInGuest?.invitados || 0) ? 'text-champagne-dark' : 'text-rose-deep'}`}>
                   {checkInCount > (checkInGuest?.invitados || 0)
                     ? `+${checkInCount - (checkInGuest?.invitados || 0)} persona${checkInCount - (checkInGuest?.invitados || 0) !== 1 ? 's' : ''} extra${checkInCount - (checkInGuest?.invitados || 0) !== 1 ? 's' : ''}`
                     : `${checkInGuest ? (checkInGuest.invitados || 0) - checkInCount : 0} persona${(checkInGuest ? (checkInGuest.invitados || 0) - checkInCount : 0) !== 1 ? 's' : ''} menos`}
+                </p>
+              )}
+              {checkInCount === 0 && (
+                <p className="text-xs font-medium text-rose-deep">
+                  Esto cancelará el registro de llegada
                 </p>
               )}
             </div>
@@ -720,11 +721,18 @@ export default function Home() {
             </Button>
             <Button
               onClick={() => checkInGuest && confirmCheckIn(checkInGuest, checkInCount)}
-              disabled={checkInCount === 0}
-              className="flex-1 bg-gradient-to-r from-sage to-sage-dark text-white hover:opacity-90 rounded-full h-11 font-medium shadow-md disabled:opacity-50"
+              className={`flex-1 rounded-full h-11 font-medium shadow-md transition-all ${
+                checkInCount === 0
+                  ? 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                  : 'bg-gradient-to-r from-sage to-sage-dark text-white hover:opacity-90'
+              }`}
             >
               <Check className="h-4 w-4 mr-1.5" />
-              {checkInCount === 0 ? 'Confirmar' : `Registrar ${checkInCount} persona${checkInCount !== 1 ? 's' : ''}`}
+              {checkInCount === 0
+                ? 'Cancelar Llegada'
+                : checkInGuest?.arrived
+                  ? `Actualizar a ${checkInCount} persona${checkInCount !== 1 ? 's' : ''}`
+                  : `Registrar ${checkInCount} persona${checkInCount !== 1 ? 's' : ''}`}
             </Button>
           </DialogFooter>
         </DialogContent>

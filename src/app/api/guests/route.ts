@@ -57,17 +57,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Toggle arrival
-    const newArrived = !guest.arrived;
-    const newArrivedCount = newArrived
-      ? (body.count !== undefined && body.count !== null ? parseInt(body.count) : guest.invitados)
-      : 0;
+    // Determine arrival based on count
+    const parsedCount = body.count !== undefined && body.count !== null ? parseInt(body.count) : 0;
+    const newArrived = parsedCount > 0;
+    const newArrivedCount = parsedCount;
+    const keepOldDate = newArrived && guest.arrived;
     const updated = await db.guest.update({
       where: { id },
       data: {
         arrived: newArrived,
         arrivedCount: newArrivedCount,
-        arrivedAt: newArrived ? new Date() : null,
+        arrivedAt: newArrived ? (keepOldDate ? guest.arrivedAt : new Date()) : null,
       },
     });
 
