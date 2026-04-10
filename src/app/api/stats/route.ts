@@ -1,0 +1,52 @@
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+
+export async function GET() {
+  try {
+    const activeGuests = await db.guest.findMany({
+      where: { activo: true },
+    });
+
+    const totalPersonas = activeGuests.reduce((sum, g) => sum + g.invitados + 1, 0);
+    const arrivedGuests = activeGuests.filter((g) => g.arrived);
+    const totalArrived = arrivedGuests.reduce((sum, g) => sum + g.invitados + 1, 0);
+    const totalPending = totalPersonas - totalArrived;
+    const percentage = totalPersonas > 0 ? Math.round((totalArrived / totalPersonas) * 100) : 0;
+
+    // Breakdown by category
+    const categoryMap = new Map<string, { total: number; arrived: number; pending: number }>();
+    for (const guest of activeGuests) {
+      const personas = guest.invitados + 1;
+      const cat = guest.categoria;
+      const current = categoryMap.get(cat) || { total: 0, arrived: 0, pending: 0 };
+      current.total += personas;
+      if (guest.arrived) {
+        current.arrived += personas;
+      } else {
+        current.pending += personas;
+      }
+      categoryMap.set(cat, current);
+    }
+
+    const categories = Array.from(categoryMap.entries()).map(([name, data]) => ({
+      name,
+      ...data,
+      percentage: data.total > 0 ? Math.round((data.arrived / data.total) * 100) : 0,
+    }));
+
+    return NextResponse.json({
+      totalPersonas,
+      totalArrived,
+      totalPending,
+      percentage,
+      totalInvitados: activeGuests.length,
+      categories,
+    });
+  } catch (error) {
+    console.error("Stats error:", error);
+    return NextResponse.json(
+      { error: "Error al obtener estadísticas" },
+      { status: 500 }
+    );
+  }
+}
