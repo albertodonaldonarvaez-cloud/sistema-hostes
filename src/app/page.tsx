@@ -165,6 +165,12 @@ export default function Home() {
   };
 
   const confirmCheckIn = async (guest: Guest, count: number) => {
+    // If already arrived, only allow adding more (no lowering or cancelling)
+    if (guest.arrived && count <= guest.arrivedCount) {
+      setCheckInGuest(null);
+      return;
+    }
+
     setCheckInGuest(null);
 
     const newArrived = count > 0;
@@ -635,10 +641,12 @@ export default function Home() {
             <DialogHeader className="text-left">
               <DialogTitle className="text-lg font-semibold text-charcoal flex items-center gap-2">
                 <Heart className="h-5 w-5 text-rose-deep" />
-                {checkInGuest?.arrived ? 'Modificar Llegada' : 'Registrar Llegada'}
+                {checkInGuest?.arrived ? 'Agregar Personas' : 'Registrar Llegada'}
               </DialogTitle>
               <DialogDescription className="text-warm-gray text-sm mt-1">
-                ¿Cuántas personas {checkInGuest?.arrived ? 'han llegado en total' : 'llegaron'} con <span className="font-semibold text-charcoal">{checkInGuest?.nombre}</span>?
+                {checkInGuest?.arrived
+                  ? <><span className="font-semibold text-charcoal">{checkInGuest.nombre}</span> ya llegó con {checkInGuest.arrivedCount} persona{checkInGuest.arrivedCount !== 1 ? 's' : ''}. ¿Llegaron más?</>
+                  : <>¿Cuántas personas llegaron con <span className="font-semibold text-charcoal">{checkInGuest?.nombre}</span>?</>}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -646,17 +654,21 @@ export default function Home() {
             {/* Counter */}
             <div className="flex items-center justify-center gap-6">
               <button
-                onClick={() => setCheckInCount((c) => Math.max(0, c - 1))}
-                className="h-12 w-12 rounded-full border-2 border-rose-soft bg-white text-rose-deep hover:bg-rose-light/50 hover:border-rose-mid flex items-center justify-center transition-all active:scale-95"
+                onClick={() => setCheckInCount((c) => Math.max(checkInGuest?.arrived ? checkInGuest.arrivedCount : 0, c - 1))}
+                disabled={checkInGuest?.arrived ? checkInCount <= checkInGuest.arrivedCount : checkInCount <= 0}
+                className={`h-12 w-12 rounded-full border-2 border-rose-soft bg-white text-rose-deep flex items-center justify-center transition-all active:scale-95 ${checkInGuest?.arrived ? (checkInCount <= checkInGuest.arrivedCount ? 'opacity-30 cursor-not-allowed' : 'hover:bg-rose-light/50 hover:border-rose-mid') : 'hover:bg-rose-light/50 hover:border-rose-mid'}`}
               >
                 <Minus className="h-5 w-5" />
               </button>
               <div className="text-center min-w-[80px]">
                 <Input
                   type="number"
-                  min={0}
+                  min={checkInGuest?.arrived ? checkInGuest.arrivedCount : 0}
                   value={checkInCount}
-                  onChange={(e) => setCheckInCount(Math.max(0, parseInt(e.target.value) || 0))}
+                  onChange={(e) => {
+                    const min = checkInGuest?.arrived ? checkInGuest.arrivedCount : 0;
+                    setCheckInCount(Math.max(min, parseInt(e.target.value) || 0));
+                  }}
                   className="h-16 w-20 text-center text-3xl font-bold text-charcoal rounded-xl border-rose-light/60 focus:border-champagne focus:ring-champagne/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
@@ -671,44 +683,45 @@ export default function Home() {
             {/* Info text */}
             <div className="text-center space-y-1">
               <p className="text-sm text-warm-gray">
-                Esperadas: <span className="font-semibold text-charcoal">{checkInGuest?.invitados} persona{checkInGuest && checkInGuest.invitados !== 1 ? 's' : ''}</span>
+                {checkInGuest?.arrived
+                  ? <>Ya registradas: <span className="font-semibold text-sage-dark">{checkInGuest.arrivedCount} persona{checkInGuest.arrivedCount !== 1 ? 's' : ''}</span></>
+                  : <>Esperadas: <span className="font-semibold text-charcoal">{checkInGuest?.invitados} persona{checkInGuest && checkInGuest.invitados !== 1 ? 's' : ''}</span></>}
               </p>
-              {checkInCount !== checkInGuest?.invitados && checkInCount > 0 && (
-                <p className={`text-xs font-medium ${checkInCount > (checkInGuest?.invitados || 0) ? 'text-champagne-dark' : 'text-rose-deep'}`}>
-                  {checkInCount > (checkInGuest?.invitados || 0)
-                    ? `+${checkInCount - (checkInGuest?.invitados || 0)} persona${checkInCount - (checkInGuest?.invitados || 0) !== 1 ? 's' : ''} extra${checkInCount - (checkInGuest?.invitados || 0) !== 1 ? 's' : ''}`
-                    : `${checkInGuest ? (checkInGuest.invitados || 0) - checkInCount : 0} persona${(checkInGuest ? (checkInGuest.invitados || 0) - checkInCount : 0) !== 1 ? 's' : ''} menos`}
-                </p>
-              )}
-              {checkInCount === 0 && (
-                <p className="text-xs font-medium text-rose-deep">
-                  Esto cancelará el registro de llegada
+              {checkInCount > (checkInGuest?.arrived ? checkInGuest.arrivedCount : 0) && (
+                <p className="text-xs font-medium text-champagne-dark">
+                  +{checkInCount - (checkInGuest?.arrived ? checkInGuest.arrivedCount : 0)} persona{checkInCount - (checkInGuest?.arrived ? checkInGuest.arrivedCount : 0) !== 1 ? 's' : ''} más
                 </p>
               )}
             </div>
 
             {/* Quick buttons */}
             <div className="flex flex-wrap justify-center gap-2">
-              <button
-                onClick={() => setCheckInCount(checkInGuest?.invitados || 0)}
-                className="px-3 py-1.5 rounded-full text-xs font-medium bg-champagne-light text-champagne-dark hover:bg-champagne hover:text-white transition-all"
-              >
-                Todas ({checkInGuest?.invitados || 0})
-              </button>
-              {checkInGuest && checkInGuest.invitados > 1 && (
+              {!checkInGuest?.arrived && (
+                <>
+                  <button
+                    onClick={() => setCheckInCount(checkInGuest?.invitados || 0)}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-champagne-light text-champagne-dark hover:bg-champagne hover:text-white transition-all"
+                  >
+                    Todas ({checkInGuest?.invitados || 0})
+                  </button>
+                  {checkInGuest && checkInGuest.invitados > 1 && (
+                    <button
+                      onClick={() => setCheckInCount(1)}
+                      className="px-3 py-1.5 rounded-full text-xs font-medium bg-rose-light text-rose-deep hover:bg-rose-soft hover:text-white transition-all"
+                    >
+                      Solo 1
+                    </button>
+                  )}
+                </>
+              )}
+              {checkInGuest?.arrived && (
                 <button
-                  onClick={() => setCheckInCount(1)}
-                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-rose-light text-rose-deep hover:bg-rose-soft hover:text-white transition-all"
+                  onClick={() => setCheckInCount(checkInGuest.arrivedCount + 1)}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium bg-sage-light text-sage-dark hover:bg-sage hover:text-white transition-all"
                 >
-                  Solo 1
+                  +1 persona más
                 </button>
               )}
-              <button
-                onClick={() => setCheckInCount(0)}
-                className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 text-warm-gray hover:bg-gray-200 transition-all"
-              >
-                0 — No llegó
-              </button>
             </div>
           </div>
           <DialogFooter className="px-6 pb-5 pt-0 flex gap-3 sm:gap-3">
@@ -722,17 +735,17 @@ export default function Home() {
             <Button
               onClick={() => checkInGuest && confirmCheckIn(checkInGuest, checkInCount)}
               className={`flex-1 rounded-full h-11 font-medium shadow-md transition-all ${
-                checkInCount === 0
-                  ? 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                checkInGuest?.arrived && checkInCount <= checkInGuest.arrivedCount
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   : 'bg-gradient-to-r from-sage to-sage-dark text-white hover:opacity-90'
               }`}
             >
               <Check className="h-4 w-4 mr-1.5" />
-              {checkInCount === 0
-                ? 'Cancelar Llegada'
-                : checkInGuest?.arrived
-                  ? `Actualizar a ${checkInCount} persona${checkInCount !== 1 ? 's' : ''}`
-                  : `Registrar ${checkInCount} persona${checkInCount !== 1 ? 's' : ''}`}
+              {checkInGuest?.arrived
+                ? checkInCount > checkInGuest.arrivedCount
+                  ? `Agregar ${checkInCount - checkInGuest.arrivedCount} persona${checkInCount - checkInGuest.arrivedCount !== 1 ? 's' : ''}`
+                  : 'Sin cambios'
+                : `Registrar ${checkInCount} persona${checkInCount !== 1 ? 's' : ''}`}
             </Button>
           </DialogFooter>
         </DialogContent>
