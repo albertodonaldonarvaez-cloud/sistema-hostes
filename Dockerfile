@@ -7,7 +7,7 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci --ignore-scripts
+RUN npm install --ignore-scripts
 
 # Stage 2: Build the application
 FROM node:20-alpine AS builder
@@ -32,9 +32,12 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma schema for seed endpoint
+# Copy Prisma + xlsx (needed for seed endpoint at runtime)
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/upload ./upload
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/xlsx ./node_modules/xlsx
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
