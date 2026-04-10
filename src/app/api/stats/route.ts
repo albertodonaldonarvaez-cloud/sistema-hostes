@@ -5,16 +5,16 @@ export async function GET() {
   try {
     const allGuests = await db.guest.findMany();
 
-    const totalPersonas = allGuests.reduce((sum, g) => sum + g.invitados + 1, 0);
+    const totalPersonas = allGuests.reduce((sum, g) => sum + g.invitados, 0);
     const arrivedGuests = allGuests.filter((g) => g.arrived);
-    const totalArrived = arrivedGuests.reduce((sum, g) => sum + g.invitados + 1, 0);
+    const totalArrived = arrivedGuests.reduce((sum, g) => sum + g.invitados, 0);
     const totalPending = totalPersonas - totalArrived;
     const percentage = totalPersonas > 0 ? Math.round((totalArrived / totalPersonas) * 100) : 0;
 
     // Breakdown by category
     const categoryMap = new Map<string, { total: number; arrived: number; pending: number }>();
     for (const guest of allGuests) {
-      const personas = guest.invitados + 1;
+      const personas = guest.invitados;
       const cat = guest.categoria;
       const current = categoryMap.get(cat) || { total: 0, arrived: 0, pending: 0 };
       current.total += personas;

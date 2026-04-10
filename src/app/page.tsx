@@ -164,7 +164,7 @@ export default function Home() {
     );
 
     if (stats) {
-      const personasDelta = guest.invitados + 1;
+      const personasDelta = guest.invitados;
       setStats({
         ...stats,
         totalArrived: newArrived
@@ -200,9 +200,9 @@ export default function Home() {
         await loadData();
         toast.error('Error al registrar llegada');
       } else {
-        const personaText = guest.invitados + 1 === 1 ? 'persona' : 'personas';
+        const personaText = guest.invitados === 1 ? 'persona' : 'personas';
         if (newArrived) {
-          toast.success(`💍 ${guest.nombre} — ${guest.invitados + 1} ${personaText} registrada${guest.invitados + 1 > 1 ? 's' : ''}`);
+          toast.success(`💍 ${guest.nombre} — ${guest.invitados} ${personaText} registrada${guest.invitados > 1 ? 's' : ''}`);
         } else {
           toast.info(`↩️ ${guest.nombre} — llegada cancelada`);
         }
@@ -241,7 +241,7 @@ export default function Home() {
 
   const getCategoryArrived = (cat: string, guestsList: Guest[]): { arrived: number; totalPersonas: number } => {
     const arrived = guestsList.filter((g) => g.arrived).length;
-    const totalPersonas = guestsList.reduce((s, g) => s + g.invitados + 1, 0);
+    const totalPersonas = guestsList.reduce((s, g) => s + g.invitados, 0);
     return { arrived, totalPersonas };
   };
 
@@ -532,7 +532,7 @@ export default function Home() {
                     <Separator className="bg-rose-light/50" />
                     <div className="p-3 sm:p-4 space-y-2 max-h-[70vh] overflow-y-auto wedding-scrollbar">
                       {catGuests.map((guest) => {
-                        const totalPersonas = guest.invitados + 1;
+                        const totalPersonas = guest.invitados;
                         const isAnimating = animatingId === guest.id;
 
                         return (
