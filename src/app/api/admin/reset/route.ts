@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureSchema } from "@/lib/ensure-schema";
 
 export async function POST() {
   try {
+    await ensureSchema();
     const result = await db.guest.updateMany({
       data: {
         arrived: false,

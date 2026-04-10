@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureSchema } from "@/lib/ensure-schema";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import * as XLSX from "xlsx";
@@ -24,6 +25,7 @@ function cleanCategoria(raw: string | undefined | null): string {
 
 export async function POST(req: NextRequest) {
   try {
+    await ensureSchema();
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
 

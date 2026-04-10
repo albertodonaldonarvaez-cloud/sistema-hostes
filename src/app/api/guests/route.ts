@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureSchema } from "@/lib/ensure-schema";
 
 export async function GET(req: NextRequest) {
   try {
+    await ensureSchema();
+
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search")?.toLowerCase() || "";
     const categoria = searchParams.get("categoria") || "";
@@ -39,6 +42,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    await ensureSchema();
+
     const body = await req.json();
     const { id, count } = body;
 
@@ -57,7 +62,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Determine arrival based on count
     const parsedCount = body.count !== undefined && body.count !== null ? parseInt(body.count) : 0;
     const newArrived = parsedCount > 0;
     const newArrivedCount = parsedCount;
@@ -83,6 +87,8 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH() {
   try {
+    await ensureSchema();
+
     const result = await db.guest.updateMany({
       data: {
         arrived: false,

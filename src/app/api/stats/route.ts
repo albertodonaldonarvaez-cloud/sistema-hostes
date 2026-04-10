@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { ensureSchema } from "@/lib/ensure-schema";
 
 export async function GET() {
   try {
+    await ensureSchema();
+
     const allGuests = await db.guest.findMany();
 
     const totalPersonas = allGuests.reduce((sum, g) => sum + g.invitados, 0);
@@ -11,7 +14,6 @@ export async function GET() {
     const totalPending = totalPersonas - totalArrived;
     const percentage = totalPersonas > 0 ? Math.round((totalArrived / totalPersonas) * 100) : 0;
 
-    // Breakdown by category
     const categoryMap = new Map<string, { total: number; arrived: number; pending: number }>();
     for (const guest of allGuests) {
       const personas = guest.invitados;
