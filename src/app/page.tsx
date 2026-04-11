@@ -61,6 +61,44 @@ interface Stats {
 // ===== VIVID, DISTINCTIVE CATEGORY COLORS =====
 // Each category gets a bold, easily-identifiable color
 const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string; dot: string; light: string; badge: string; card: string }> = {
+  // === Current categories from latest Excel ===
+  'Henandez': {
+    bg: 'bg-rose-500',
+    text: 'text-rose-600',
+    border: 'border-l-rose-500',
+    dot: 'bg-rose-500',
+    light: 'bg-rose-50',
+    badge: 'bg-rose-100 text-rose-700 border-rose-200',
+    card: 'bg-rose-50/60 border-rose-100',
+  },
+  'Estrada': {
+    bg: 'bg-amber-500',
+    text: 'text-amber-600',
+    border: 'border-l-amber-500',
+    dot: 'bg-amber-500',
+    light: 'bg-amber-50',
+    badge: 'bg-amber-100 text-amber-700 border-amber-200',
+    card: 'bg-amber-50/60 border-amber-100',
+  },
+  'Especiales': {
+    bg: 'bg-violet-500',
+    text: 'text-violet-600',
+    border: 'border-l-violet-500',
+    dot: 'bg-violet-500',
+    light: 'bg-violet-50',
+    badge: 'bg-violet-100 text-violet-700 border-violet-200',
+    card: 'bg-violet-50/60 border-violet-100',
+  },
+  'Amigos y trabajo': {
+    bg: 'bg-teal-500',
+    text: 'text-teal-600',
+    border: 'border-l-teal-500',
+    dot: 'bg-teal-500',
+    light: 'bg-teal-50',
+    badge: 'bg-teal-100 text-teal-700 border-teal-200',
+    card: 'bg-teal-50/60 border-teal-100',
+  },
+  // === Legacy categories (kept for compatibility) ===
   'Familia Hdez': {
     bg: 'bg-rose-500',
     text: 'text-rose-600',
@@ -169,7 +207,6 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string
     badge: 'bg-cyan-100 text-cyan-700 border-cyan-200',
     card: 'bg-cyan-50/60 border-cyan-100',
   },
-  // Legacy categories (kept for compatibility)
   'P': {
     bg: 'bg-sky-500',
     text: 'text-sky-600',
