@@ -19,6 +19,8 @@ import {
   UserCheck,
   Plus,
   Minus,
+  MapPin,
+  X,
 } from 'lucide-react';
 import {
   Dialog,
@@ -245,6 +247,31 @@ const CATEGORY_STYLES: Record<string, { bg: string; text: string; border: string
   },
 };
 
+// ===== CATEGORY ZONE MAPPING =====
+// Maps each category to its zone/location description for the hostess
+const CATEGORY_ZONE: Record<string, string> = {
+  'Henandez': 'Zona Familia Hernández',
+  'Estrada': 'Zona Familia Estrada',
+  'Especiales': 'Zona Especiales',
+  'Amigos y trabajo': 'Zona Amigos y Trabajo',
+  'Familia Hdez': 'Zona Familia Hernández',
+  'Fam. Estrada': 'Zona Familia Estrada',
+  'DIF': 'Zona DIF',
+  'Maestros': 'Zona Maestros',
+  'Amigos de la familia': 'Zona Amigos de la Familia',
+  'Familiar lejano': 'Zona Familiar Lejano',
+  'Amigos de la familia (Especial Gobierno)': 'Zona Especial Gobierno',
+  'presidencia': 'Zona Presidencia',
+  'Amigos de la familia (Especial)': 'Zona Especial',
+  'Familia': 'Zona Familia',
+  'educación especial': 'Zona Educación Especial',
+  'educación especial amigos': 'Zona Educación Especial',
+  'P': 'Zona P',
+  'Palomita': 'Zona Palomita',
+  'Policía': 'Zona Policía',
+  'Familia y Amigos': 'Zona General',
+};
+
 const DEFAULT_STYLE = {
   bg: 'bg-gray-500',
   text: 'text-gray-600',
@@ -271,6 +298,7 @@ export default function Home() {
   const [animatingId, setAnimatingId] = useState<string | null>(null);
   const [checkInGuest, setCheckInGuest] = useState<Guest | null>(null);
   const [checkInCount, setCheckInCount] = useState(0);
+  const [showMapGuest, setShowMapGuest] = useState<{ nombre: string; categoria: string; count: number } | null>(null);
 
   const fetchGuests = useCallback(async () => {
     try {
@@ -329,6 +357,11 @@ export default function Home() {
     }
 
     setCheckInGuest(null);
+
+    // Show map dialog after successful registration
+    if (!guest.arrived && count > 0) {
+      setShowMapGuest({ nombre: guest.nombre, categoria: guest.categoria, count });
+    }
 
     const newArrived = count > 0;
     const newArrivedAt = newArrived ? new Date().toISOString() : null;
@@ -753,6 +786,63 @@ export default function Home() {
         {/* Spacer */}
         <div className="h-4" />
       </main>
+
+      {/* ===== LOCATION MAP DIALOG — Shows after registration ===== */}
+      <Dialog open={showMapGuest !== null} onOpenChange={(open) => { if (!open) setShowMapGuest(null); }}>
+        <DialogContent className="sm:max-w-lg rounded-2xl border-gray-200 bg-white p-0 overflow-hidden mx-4 [max-width:calc(100%-2rem)]">
+          {showMapGuest && (
+            <>
+              {/* Map header */}
+              <div className={`px-5 py-4 ${getCatStyle(showMapGuest.categoria).light} border-b border-gray-100`}>
+                <DialogHeader className="text-left">
+                  <DialogTitle className="text-base sm:text-lg font-semibold text-charcoal flex items-center gap-2">
+                    <MapPin className={`h-5 w-5 ${getCatStyle(showMapGuest.categoria).text}`} />
+                    Ubicación de Mesa
+                  </DialogTitle>
+                  <DialogDescription className="text-warm-gray text-sm mt-1">
+                    <span className="font-semibold text-charcoal">{showMapGuest.nombre}</span> — {showMapGuest.count} persona{showMapGuest.count !== 1 ? 's' : ''} registrada{showMapGuest.count !== 1 ? 's' : ''}
+                  </DialogDescription>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold ${getCatStyle(showMapGuest.categoria).badge}`}>
+                      <span className={`h-2 w-2 rounded-full ${getCatStyle(showMapGuest.categoria).dot}`} />
+                      {showMapGuest.categoria}
+                    </span>
+                    <span className="text-sm font-medium text-charcoal">
+                      → {CATEGORY_ZONE[showMapGuest.categoria] || 'Zona General'}
+                    </span>
+                  </div>
+                </DialogHeader>
+              </div>
+
+              {/* Map image */}
+              <div className="p-3">
+                <div className="relative rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-50">
+                  <img
+                    src="/Acomodo.png"
+                    alt="Mapa de acomodo del evento"
+                    className="w-full h-auto object-contain"
+                    style={{ maxHeight: '55vh' }}
+                  />
+                </div>
+                <p className="text-center text-xs text-warm-gray/70 mt-2">
+                  Revisa el mapa para dirigir a los invitados a su zona correspondiente
+                </p>
+              </div>
+
+              {/* Close button */}
+              <DialogFooter className="px-5 pb-4 pt-0">
+                <Button
+                  onClick={() => setShowMapGuest(null)}
+                  className="w-full rounded-xl h-12 text-sm font-semibold bg-charcoal text-white hover:bg-charcoal/90 transition-all active:scale-[0.97] shadow-md"
+                >
+                  <Check className="h-4 w-4 mr-1.5" />
+                  Entendido, siguiente
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ===== CHECK-IN DIALOG — Mobile-optimized ===== */}
       <Dialog open={checkInGuest !== null} onOpenChange={(open) => { if (!open) setCheckInGuest(null); }}>
